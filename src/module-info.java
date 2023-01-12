@@ -1,9 +1,0 @@
-/**
- * 
- */
-/**
- * @author alexey
- *
- */
-module InterUpTool {
-}
