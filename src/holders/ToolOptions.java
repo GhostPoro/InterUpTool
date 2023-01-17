@@ -199,6 +199,9 @@ public class ToolOptions {
 		String coreSettingsFileName = Configuration.CORE_CONFIG_FILE_PATH;
 		File settingsFile = new File(coreSettingsFileName);
 		
+		System.out.println("Program ROOT: " + new File(".").getAbsolutePath());
+		System.out.println("Program Looking for Config in: " + new File(Configuration.CORE_CONFIG_FILE_PATH).getAbsolutePath());
+		
 		// predefined variables here
 		Configuration.VARS_TO_OVERRIDE_IN_CONFIG.add(new TFVAR("TOOL_VERSION",    Text.TOOL_VERSION));
 		Configuration.VARS_TO_OVERRIDE_IN_CONFIG.add(new TFVAR("TOOL_NAME_SHORT", Text.TOOL_NAME_SHORT));

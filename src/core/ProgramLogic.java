@@ -488,15 +488,21 @@ public class ProgramLogic {
 			    	
 			    	if(outListStart < outListSize) {
 		    			for (int li = outListStart; li < outListSize; li++) {
-		    				String line = outList.get(li);
-		    				if(line.trim().startsWith("frame")) {
-		    					try {
-		    						int localFrame = Integer.parseInt(line.split(" ")[0].replace("frame=", "").trim());
-		    						if(localFrame > curFrame) {
-		    							curFrame = localFrame;
-		    						}
-		    					}
-		    					catch (Exception e) {}
+		    				
+		    				// sometimes because of concurrency, in this place list size 
+		    				// can be == 0, so need to check it once more
+		    				
+		    				if(li < outList.size()) {
+			    				String line = outList.get(li);
+			    				if(line != null && line.trim().startsWith("frame")) {
+			    					try {
+			    						int localFrame = Integer.parseInt(line.split(" ")[0].replace("frame=", "").trim());
+			    						if(localFrame > curFrame) {
+			    							curFrame = localFrame;
+			    						}
+			    					}
+			    					catch (Exception e) {}
+			    				}
 		    				}
 		    				//System.out.println("O: " + line + " I: " + li);
 						}
@@ -504,15 +510,21 @@ public class ProgramLogic {
 	    			
 	    			if(errListStart < errListSize) {
 		    			for (int li = errListStart; li < errListSize; li++) {
-		    				String line = errList.get(li);
-		    				if(line.trim().startsWith("frame")) {
-		    					try {
-		    						int localFrame = Integer.parseInt(line.split(" ")[0].replace("frame=", "").trim());
-		    						if(localFrame > curFrame) {
-		    							curFrame = localFrame;
-		    						}
-		    					}
-		    					catch (Exception e) {}
+		    				
+		    				// sometimes because of concurrency, in this place list size 
+		    				// can be == 0, so need to check it once more
+		    				
+		    				if(li < errList.size()) {
+		    					String line = errList.get(li);
+			    				if(line != null && line.trim().startsWith("frame")) {
+			    					try {
+			    						int localFrame = Integer.parseInt(line.split(" ")[0].replace("frame=", "").trim());
+			    						if(localFrame > curFrame) {
+			    							curFrame = localFrame;
+			    						}
+			    					}
+			    					catch (Exception e) {}
+			    				}
 		    				}
 		    				//System.err.println("O: " + line + " I: " + li);
 						}
