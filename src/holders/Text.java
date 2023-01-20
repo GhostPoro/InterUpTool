@@ -47,7 +47,22 @@ public class Text {
 	public static final String TEMP_FRAMES_FOLDER_NAME_UPSCALED     = "frames_upscale";
 	
 	/** String of help snippet for console mode application. */
-	public static final String HELP_STRING = "PUT_COOL_HELP_STRING_HERE";
+	public static final String HELP_STRING = 
+			"  Help:\n" +
+			"    -h                  print this help end exit\n\n" +
+
+			"  Output:\n" +
+			"    -v                  prints to 'console out' current file information\n" +
+			"    -vv                 same as -v, additionaly prints to 'out'\n" +
+			"                          execution commands per stage\n" +
+			"    -vvv                same as -vv, additionally prints to 'out'\n" +
+			"                          all child processes output\n\n" +
+
+			"  Temp files handling:\n" +
+			"    -nodel              any one of this 4 arguments will turn OFF\n" +
+			"    -nodelete           temporarily created files deletion, such as\n" +
+			"    -temp               extracted audio and image frames, both\n" +
+			"    -tempfiles          extracted from video and after all stages";
 	
 	/**
 	* Human readable name of tool
