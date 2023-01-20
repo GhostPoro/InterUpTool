@@ -1,5 +1,8 @@
 package tools;
 
+import holders.Configuration;
+import holders.ToolOptions;
+
 /**
  * Class to handle all logging capabilities of program.
  */
@@ -20,6 +23,16 @@ public class Logger {
 	public static String log(String line) {
 		runtimeLog.append(line + "\n");
 		return line;
+	}
+	
+	public static boolean logLevelAbove(int level) {
+		ToolOptions opts = Configuration.OPTIONS;
+		if(opts != null) {
+			if(opts.getLogLevel() >= level) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }

@@ -99,8 +99,7 @@ public class FilesProcessor {
 				String rowKey = currentFile.getCheckSum();
 				model.updateProgressBar(rowKey, 1f);
 				model.updateFileProgressStageColumn(rowKey);
-				System.err.println("FilesProcessor: set current file status to 100%");
-				
+				if(Logger.logLevelAbove(1)) { System.err.println("FilesProcessor: set current file status to 100%"); }
 			}
 		};
 		fileStatusUpdatingThread.start();

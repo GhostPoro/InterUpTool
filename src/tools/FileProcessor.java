@@ -24,7 +24,8 @@ public class FileProcessor {
 		
 		String absSourceFilePath = fileData.getFile().getAbsolutePath();
 		
-		System.err.println("\n\n\nFile: " + absSourceFilePath + "\n");
+		//System.err.println("\n\n\nFile: " + absSourceFilePath + "\n");
+		if(Logger.logLevelAbove(1)) { System.err.println("\nFile: " + absSourceFilePath); }
 		
 		boolean interpolateFiles = (opts.canSmooth() && curFileSettings.userWantInterpolate);
 		boolean upscaleFiles = (opts.canUpscale() && curFileSettings.userWantUpscale);
@@ -476,7 +477,7 @@ public class FileProcessor {
 				// pack everything in output file
 				
 				// remove temp folder if its needed, and enhancing process does not interrupted
-				if(Configuration.PROCESSING && curFileSettings.removeTempFiles) {
+				if(Configuration.PROCESSING && curFileSettings.removeTempFiles && opts.removeTempFiles()) {
 					Utils.deleteDirectory(temFolderFile);
 				}
 			}

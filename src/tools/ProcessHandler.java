@@ -29,6 +29,10 @@ public class ProcessHandler {
 	public static String[] run(final String cmd, final String killLine, final boolean waitForFinish, final boolean singleRequeest, final List<String> appOutputNormal, final List<String> appOutputErrors, final String[] outputs) {
 		Process process = null;
 		
+		if(Logger.logLevelAbove(2)) {
+			System.out.println("ProcessHandler.run EXEC: " + cmd);
+		}
+		
 		try {
 			
 			if(Configuration.PROCESSING || singleRequeest) { // no matter what, create process only in program in 'PROCESSING' stage 
@@ -150,12 +154,15 @@ public class ProcessHandler {
 			    public void run() {
 					BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
 					StringBuilder strBuilder = new StringBuilder();
+					
+					boolean showProcessOutput = (Logger.logLevelAbove(3) || DEBUG);
+					
 					try {
 						String output = reader.readLine();
 						while (output != null) {
 							String trimmedOutput = output.trim();
 							storage.add(trimmedOutput);
-							if(DEBUG) { System.out.println(trimmedOutput); }
+							if(showProcessOutput) { System.out.println(trimmedOutput); }
 							strBuilder.append(trimmedOutput + "\n");
 							output = reader.readLine();
 						}

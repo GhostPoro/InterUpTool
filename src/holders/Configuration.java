@@ -11,6 +11,11 @@ public class Configuration {
 	
 	public static enum OS { WIN, LINUX, MAC };
 	
+	public final static int windowInitWidth  = 720;
+	public final static int windowInitHeight = 500;
+	
+	public final static String[] validImageExtensions = new String[] { "jpeg", "jpg", "png" };
+	
 	public static final int MAX_RECURTION_DEPTH = 16;
 	
 	public static final List<TFVAR> VARS_TO_OVERRIDE_IN_CONFIG = new ArrayList<TFVAR>();
@@ -28,8 +33,6 @@ public class Configuration {
 	
 	public static boolean PROCESSING = false;
 	
-	public static final int THREADS = 24;
-	
 	public static final OS os = ProgramLogic.getOperetionSystemType();
 	
 	/** Error message in case of inability to create or read core program settings file. */
@@ -40,6 +43,7 @@ public class Configuration {
 	
 	/** Predefined Number of Threads for Image scaling. */
 	public static final String DEFAULT_THREADS_NUMBER_FOR_IMAGE_SCALING = "12";
+	public static final int THREADS = 24;
 	
 	/** Array of ignored Variables names from program config
     on back-propagation check stage. */

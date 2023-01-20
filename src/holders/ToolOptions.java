@@ -14,9 +14,6 @@ import tools.Utils;
 
 public class ToolOptions {
 	
-	public final int windowInitWidth  = 720;
-	public final int windowInitHeight = 500;
-	
 	public final String FFMPEG_ENCODER_APP_PATH;
 	public final String FFMPEG_INFO_APP_PATH;
 	
@@ -36,13 +33,15 @@ public class ToolOptions {
 	// if its not set -> create folder in program location folder 
 	private String tempFilesFolderPath = null;
 	
-	public final String[] validImageExtensions = new String[] { "jpeg", "jpg", "png" };
-	
 	// program settings
 	private boolean canUpscale = false;
 	private boolean canSmooth  = false;
 	private boolean canGetInfo = false;
 	private boolean canProcess = false;
+	
+	// optional settings (can be altered with run/config options)
+	private boolean removeTempFiles = true;
+	private int logLevel = 0;
 
 	public ToolOptions(String ffmpegEncAppPath, String ffmpegInfoAppPath, String scalerAppPath, String scalerModelPath, String fpsMakerAppPath, String fpsMakerModelPath, String framesName, String framesType) {
 		
@@ -177,6 +176,28 @@ public class ToolOptions {
 		return canSmooth;
 	}
 
+	public boolean removeTempFiles() {
+		return removeTempFiles;
+	}
+	
+	private ToolOptions setRemoveTempFiles(boolean key) {
+		this.removeTempFiles = key;
+		System.out.println("Remove Temp Files: " + this.removeTempFiles);
+		return this;
+	}
+
+	public int getLogLevel() {
+		return logLevel;
+	}
+	
+	private ToolOptions increaseLogLevelTo(int level) {
+		if(this.logLevel < level) {
+			this.logLevel = level;
+			System.out.println("Log Level set to: " + this.logLevel);
+		}
+		return this;
+	}
+
 	public boolean allValid() {
 		List<TFVAR> vars = Configuration.VARS_PARAMETERS;
 		for(TFVAR var : vars) {
@@ -237,6 +258,36 @@ public class ToolOptions {
 			Configuration.getVAR("FRAMES_STORING_FORMAT"),
 			Configuration.getVAR("FRAMES_EXTENSION")
 		);
+		
+		
+		int argSize = ((inputARGs != null) ? inputARGs.length : 0);
+		for (int ai = 0; ai < argSize; ai++) {
+			String arg = inputARGs[ai].trim();
+			
+			if(arg.startsWith("-")) {
+				switch (arg) {
+				
+					// prevent removing temp files
+					case "-nodel"     :
+					case "-nodelete"  :
+					case "-temp"      :
+					case "-tempfiles" : opts.setRemoveTempFiles(false); break;
+					
+					// show execution progress in console
+					// simple output (aka statistic)
+					case "-v"   : opts.increaseLogLevelTo(1); break;
+					// show run commands
+					case "-vv"  : opts.increaseLogLevelTo(2); break;
+					// show processes outputs
+					case "-vvv" : opts.increaseLogLevelTo(3); break;
+					
+					// TODO: create functionality for only commands generation
+		
+					default     : break;
+				}
+			}
+			
+		}
 		
 		/* if config file invalid or not exist -> recreate 
 		 * with predefined and retrieved and approved settings

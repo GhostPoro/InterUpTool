@@ -27,10 +27,12 @@ public class Main {
 
 	public static void main(String[] args) {
 		
-//		System.exit(0);
-		
 		/* Load simple core configuration. */
 		Configuration.init();
+		
+		// test room
+		//Configuration.PROCESSING = true;
+		//System.exit(0);
 		
 		/* Process basic supplied arguments. */
 		if(args != null) {
@@ -61,7 +63,7 @@ public class Main {
 		}
 		else {
 			if(consoleMode) {
-				System.err.println(Text.PANIC_EXIT_EXPLAIN);
+				System.err.println(Text.PANIC_EXIT_EXPLAIN); 
 			}
 			else {
 				JOptionPane.showMessageDialog(null, Text.PANIC_EXIT_EXPLAIN);

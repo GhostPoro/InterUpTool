@@ -111,7 +111,6 @@ public class WindowLayout {
 
 				// Register the table model listener with the table's data model.
 				updTableModel.addTableModelListener(tml);
-				
 
 				JFrame frame = new JFrame();
 				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -123,7 +122,7 @@ public class WindowLayout {
 				// Create and set up the menu bar and content pane.
 				frame.setJMenuBar(createMenuBar(frame, table));
 
-				frame.add(new AdvDnDPane(dummyOpts.windowInitHeight, dummyOpts.windowInitWidth, table, updTableModel));
+				frame.add(new AdvDnDPane(Configuration.windowInitHeight, Configuration.windowInitWidth, table, updTableModel));
 
 				// delleteing by pressing 'DEL' key
 				Action deleteRows = new AbstractAction() {
