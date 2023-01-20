@@ -58,7 +58,7 @@ public class Text {
 	/** Human readable full name of tool */
 	public static final String TOOL_NAME_FULL  = "Pictures and Video, Interpolating and Up-scaling Tool";
 	/** Version of tool */
-	public static final String TOOL_VERSION    = "v0.01";
+	public static final String TOOL_VERSION    = "v0.02";
 	
 	/** String of help snippet for console mode application */
 	public static final String DEFAULT_SETTINGS_FILE_STRING = 
