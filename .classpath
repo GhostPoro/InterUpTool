@@ -6,5 +6,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="libs/webp-imageio-0.1.6.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

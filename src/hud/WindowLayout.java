@@ -23,6 +23,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
 import holders.Configuration;
+import holders.CurrentSessionFilesProcessingSettings;
 import holders.ToolOptions;
 import tools.FilesProcessor;
 import tools.Logger;
@@ -43,6 +44,8 @@ public class WindowLayout {
 		}
 		
 		final ToolOptions dummyOpts = Configuration.OPTIONS;
+		
+		Configuration.SETTINGS = new CurrentSessionFilesProcessingSettings();
 
 		EventQueue.invokeLater(new Runnable() {
 
@@ -150,10 +153,11 @@ public class WindowLayout {
 	// Create an Edit menu to support cut/copy/paste.
 	public JMenuBar createMenuBar(JFrame frame, JTable table) {
 		JMenuItem menuItem = null;
-		JMenuBar menuBar = new JMenuBar();
+		
 		JMenu mainMenu = new JMenu("File");
 		
 		menuItem = new JMenuItem("Open Config File");
+		mainMenu.add(menuItem);
 		menuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -161,9 +165,9 @@ public class WindowLayout {
 			}
 		});
 		
-		mainMenu.add(menuItem);
 		
 		menuItem = new JMenuItem("Show Last Errors");
+		mainMenu.add(menuItem);
 		menuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -173,18 +177,25 @@ public class WindowLayout {
 			}
 		});
 		
-		mainMenu.add(menuItem);
 
-		JButton playBtn = new JButton("Process >>");
-		menuBar.setLayout(new GridLayout(1,8));
-
-		playBtn.addActionListener(new ActionListener() {
+		
+		
+		JButton btn_SessionSettings = new JButton("Settings");
+		btn_SessionSettings.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new SessionSettingsGUI();
+			}
+		});
+		
+		JButton btn_StartProcess = new JButton("Process >>");
+		btn_StartProcess.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				
 				if(Configuration.PROCESSING) {
 					System.out.println("Cancelling files processing...");
-					playBtn.setText("Process >>");;
+					btn_StartProcess.setText("Process >>");;
 					Configuration.PROCESSING = false;
 					//List<RowData> rows = updTableModel.getRowsData();
 					// reset state
@@ -194,6 +205,7 @@ public class WindowLayout {
 //						updTableModel.updateProgressBar(rowData.getCheckSum(), curSatus);
 //					}
 					table.setEnabled(true);
+					btn_SessionSettings.setEnabled(true);
 					//System.out.println("Done A!");
 				}
 				else {
@@ -206,8 +218,9 @@ public class WindowLayout {
 							public void run() {
 								
 								table.setEnabled(false);
+								btn_SessionSettings.setEnabled(false);
 								table.clearSelection();
-								playBtn.setText("Cancel");
+								btn_StartProcess.setText("Cancel");
 								Configuration.PROCESSING = true;
 								
 								System.out.println("Files enchancing process Started!");
@@ -219,9 +232,10 @@ public class WindowLayout {
 									System.err.println("Files enchancing process finished with errors or was interrupted!");
 								}
 								
-								playBtn.setText("Process >>");;
+								btn_StartProcess.setText("Process >>");;
 								Configuration.PROCESSING = false;
 								table.setEnabled(true);
+								btn_SessionSettings.setEnabled(true);
 							}
 						};
 						filesProcessingThread.start();
@@ -236,13 +250,17 @@ public class WindowLayout {
 			}
 		});
 
+		JMenuBar menuBar = new JMenuBar();
+		menuBar.setLayout(new GridLayout(1,8));
 		menuBar.add(mainMenu);
 		menuBar.add(new JLabel(""));
 		menuBar.add(new JLabel(""));
-		menuBar.add(new JLabel(""));
-		menuBar.add(new JLabel(""));
-		menuBar.add(new JLabel(""));
-		menuBar.add(playBtn, BorderLayout.EAST);
+		//menuBar.add(new JLabel(""));
+		menuBar.add(Configuration.INFOLABELIMAGE);
+		menuBar.add(Configuration.INFOLABELANIMS);
+		menuBar.add(Configuration.INFOLABELTOOLS);
+		menuBar.add(btn_SessionSettings);
+		menuBar.add(btn_StartProcess, BorderLayout.EAST);
 
 		return menuBar;
 	}

@@ -35,8 +35,11 @@ public class FileProcessor {
 		
 		String[] outputs = null;
 		
+		//System.out.println("Its Image: " + fileData.itsImage() + " | Format: " + fileData.getType() + " | Its Animated: + " + fileData.itsAnimated());
+		
 		if(interpolateFiles || upscaleFiles) {
 			
+			/* Current File -> its IMAGE */
 			if(fileData.itsImage()) {
 				if(fileData.itsAnimated()) {
 					float fps = fileData.getFPS();
@@ -56,9 +59,179 @@ public class FileProcessor {
 				}
 				else if(upscaleFiles) { // regular up-scaling
 					// up-scale image
-				}
-			}
-			else { /* File its VIDEO */
+					
+					fileData.setTargetStatus(0.2f);
+					fileData.initProcessingTime();
+					
+					// Source file info
+					//String sourceFilePath = Utils.quotePath(absSourceFilePath);
+					String sourceFileExt = Utils.getExtensionFromPath(absSourceFilePath);
+					
+					String rootTempFolderPath = ProgramLogic.getTempFolderPath();
+					
+					String currentFileInitTempFolderPath = (rootTempFolderPath + "/uitool_temp_proccessing_" + System.currentTimeMillis());
+					
+					File temFolderFile = new File(currentFileInitTempFolderPath);
+					temFolderFile.mkdirs();
+					String currentFileTempFolderPath = temFolderFile.getAbsolutePath();
+					
+					List<TFVAR> vars = Configuration.VARS_TO_IMAGE_PROCESSING;
+					
+					String CURRENT_STAGE_INPUT_IMAGE_FILE_PATH = absSourceFilePath;
+					
+					String CURRENT_STAGE_OUTPUT_IMAGE_FILE_PATH = (currentFileTempFolderPath + "/image_upscale_stage_" + Utils.addZerosToName(1, 2) + "_upscaled." + sourceFileExt);
+					
+					int image_processing_stage = 2; // 0
+					
+//					int targetW = 7680;
+//					int targetH = 4320;
+					
+					int currentW = fileData.getDimensions()[0];
+					int currentH = fileData.getDimensions()[1];
+					
+					int targetW = ((curFileSettings.imageScalingOption == 0) ? (currentW * curFileSettings.imageScalingFactor) : curFileSettings.imageTargetW);
+					int targetH = ((curFileSettings.imageScalingOption == 0) ? (currentH * curFileSettings.imageScalingFactor) : curFileSettings.imageTargetH);
+					
+					int[] outSize = new int[] { targetW, targetH };
+					
+					// can be null, if real scale >= target scale
+//					int[] realImageSize = ProgramLogic.needScalingStage(CURRENT_STAGE_INPUT_IMAGE_FILE_PATH, targetW, targetH, null);
+//					boolean needUpscale = (realImageSize != null);
+					// SOMEHOW THIS ONE CANT READ FILE FROM DISK WTF?
+					
+
+					
+					boolean needUpscale = (currentW < targetW || currentH < targetH);
+					
+					int maxSteps = 1;
+					int currStep = 1;
+					
+					if(needUpscale) {
+						int difW = (targetW / currentW);
+						int difH = (targetH / currentH);
+						maxSteps = ((difW > difH) ? difW : difH);
+					}
+					
+					fileData.setFileProgressStage("1/1/1 of " + maxSteps);
+					
+					int vSize = vars.size();
+					maxSteps = (maxSteps + vSize - 1);
+					for (int vi = 0; vi < vSize && Configuration.PROCESSING; vi++) {
+						TFVAR var = vars.get(vi);
+						
+						String originalCommand = var.getValue();
+						
+						String smallVARName = vars.get(vi).getName().toLowerCase();
+						boolean upscalingStage = smallVARName.contains("upscal");
+						
+						// preparing array for swapping on current execution stage 
+						String[][] loopSwaps = new String[][] {
+							// set and mask UpscalerApp path
+							{ "$UPSCALER_AI_APP_PATH$", (upscaleFiles ? Utils.quotePath(opts.REALESRGAN_AI_APP_PATH) : "NO_UPSCALING_APP_SPECIFIED_OR_NOT_ALLOWED") },
+
+							// set scaler factor for upscaler
+							{ "$UPSCALER_AI_SCALE_FACTOR$", "4" },
+							
+							{ "$INPUT_IMAGE_EXTENSION$", sourceFileExt }
+						};
+						
+						int lswsize = loopSwaps.length;
+						String loopCommand = originalCommand;
+						for (int swi = 0; swi < lswsize; swi++) {
+							loopCommand = loopCommand.replace(loopSwaps[swi][0], loopSwaps[swi][1]);
+						}
+						
+						if(upscalingStage) {
+							while(needUpscale && Configuration.PROCESSING) {
+								
+								float guiStage = (maxSteps / currStep);
+								guiStage += 0.75;
+								
+								fileData.setFileProgressStage("1/1/" + currStep + " of " + maxSteps);
+								fileData.setTargetStatus(0.2f + guiStage);
+								
+								String whileCommand = loopCommand;
+								
+								if(outList != null) {
+									outList.clear();
+									outList = null;
+								}
+								
+								if(errList != null) {
+									errList.clear();
+									errList = null;
+								}
+								
+								outList = new ArrayList<String>();
+								errList = new ArrayList<String>();
+								outputs = new String[2];
+								
+								String[][] whileSwaps = new String[][] {
+									{ "$INPUT_IMAGE_CURRENT_STAGE_FILE_PATH$",  Utils.quotePath(CURRENT_STAGE_INPUT_IMAGE_FILE_PATH)  },
+									{ "$OUTPUT_IMAGE_CURRENT_STAGE_FILE_PATH$", Utils.quotePath(CURRENT_STAGE_OUTPUT_IMAGE_FILE_PATH) }
+								};
+								
+								int wswsize = whileSwaps.length;
+								for (int swi = 0; swi < wswsize; swi++) {
+									whileCommand = whileCommand.replace(whileSwaps[swi][0], whileSwaps[swi][1]);
+								}
+								
+								outputs = ProcessHandler.run(whileCommand, null, true, false, outList, errList, outputs);
+								if(outputs == null) {
+									System.err.println("ERROR EXEC: " + whileCommand);
+									return false;
+								}
+								
+								//realImageSize = ProgramLogic.needScalingStage(CURRENT_STAGE_INPUT_IMAGE_FILE_PATH, targetW, targetH, null);
+								//needUpscale = (realImageSize != null);
+								
+								currentW *= 4;
+								currentH *= 4;
+								
+								CURRENT_STAGE_INPUT_IMAGE_FILE_PATH = CURRENT_STAGE_OUTPUT_IMAGE_FILE_PATH;
+								
+								CURRENT_STAGE_OUTPUT_IMAGE_FILE_PATH = (currentFileTempFolderPath + "/image_upscale_stage_" + Utils.addZerosToName(image_processing_stage, 2) + "_upscaled." + sourceFileExt);
+								
+								needUpscale = (currentW < targetW || currentH < targetH);
+								
+//								System.out.println("Image CMD: " + whileCommand);
+//								System.out.println("Scale: " + currentW + "x" + currentH);
+								
+								if(!needUpscale) { // if no need to upscale, mabe need downscale
+									
+									// path to output files
+									String image_downscaled_by_java_path = (currentFileTempFolderPath + "/image_upscale_stage_" + Utils.addZerosToName(image_processing_stage, 2) + "_scaled_by_java." + sourceFileExt);
+									
+									if(ImageProcessor.scaleImagesToSize(CURRENT_STAGE_INPUT_IMAGE_FILE_PATH, image_downscaled_by_java_path, targetW, targetH, Configuration.THREADS, null, outSize)) {
+										// store this value for next step as input source
+										CURRENT_STAGE_INPUT_IMAGE_FILE_PATH = image_downscaled_by_java_path;
+									}
+								}
+								image_processing_stage++;
+								currStep++;
+							}
+						}
+						currStep++;
+					} // for loop thru commands (variables)
+					
+					String sourceFileName = fileData.getFile().getName();
+					String sourceFileLocation = absSourceFilePath.trim().replace("/"+sourceFileName, "/").replace("\\"+sourceFileName, "\\");
+					
+					int extSplitLoc = sourceFileName.lastIndexOf('.');
+					String fileName = ((extSplitLoc > 0) ? sourceFileName.substring(0, extSplitLoc)  : sourceFileName);
+					String fileExt  = ((extSplitLoc > 0) ? ("." + sourceFileName.substring(extSplitLoc + 1)) : "");
+					
+					if(Utils.copyFile(CURRENT_STAGE_INPUT_IMAGE_FILE_PATH, (sourceFileLocation + fileName + "_fancy_" + outSize[0] + "x" + outSize[1] + fileExt))) {
+						fileData.setTargetStatus(0.982f);
+						fileData.setFileProgressStage("1/1/" + maxSteps + " of " + maxSteps);
+						if(Configuration.PROCESSING && curFileSettings.removeTempFiles && opts.removeTempFiles()) {
+							Utils.deleteDirectory(temFolderFile);
+						}
+					}
+
+				} /* Basic Image processing */
+			} /* Basic Image or Animated Image Route */
+			else { /* Current File -> its VIDEO */
 				
 				// Source file info
 				String sourceFilePath = Utils.quotePath(absSourceFilePath);
@@ -79,7 +252,6 @@ public class FileProcessor {
 				File temFolderFile = new File(currentFileInitTempFolderPath);
 				temFolderFile.mkdirs();
 				String currentFileTempFolderPath = temFolderFile.getAbsolutePath();
-//				String currentFileTempFolderPath = "/mnt/files_4gb/Programs/image_ai_generator/upscaling/testing/uitool_temp_proccessing_1673000703403";
 				
 				List<TFVAR> vars = Configuration.VARS_TO_VIDEO_PROCESSING;
 				
@@ -91,8 +263,14 @@ public class FileProcessor {
 				boolean framesSizeBad = false;
 				boolean alreadyInterpolated = false;
 				
-				int targetW = curFileSettings.outW;
-				int targetH = curFileSettings.outH;
+				int currentW = fileData.getDimensions()[0];
+				int currentH = fileData.getDimensions()[1];
+				
+				final int finTargetW = ((curFileSettings.animationScalingOption == 0) ? (currentW * curFileSettings.animationScalingFactor) : curFileSettings.animationTargetW);
+				final int finTargetH = ((curFileSettings.animationScalingOption == 0) ? (currentH * curFileSettings.animationScalingFactor) : curFileSettings.animationTargetH);
+				
+				int targetW = finTargetW;
+				int targetH = finTargetH;
 				
 				int video_stage_idx = 1; // 1
 				int frame_stage_idx = 0; // 0
@@ -128,11 +306,13 @@ public class FileProcessor {
 					else { // all cool -> execute and process what needed
 						maxSteps++;
 					}
-					
 				}
 				
 				fileData.setTargetStatus(0.02f);
 				fileData.initProcessingTime();
+				fileData.setFileProgressStage("0/0/0 of " + maxSteps);
+				
+				
 				
 				for (int vi = 0; vi < vSize && Configuration.PROCESSING; vi++) {
 					TFVAR var = vars.get(vi);
@@ -167,7 +347,7 @@ public class FileProcessor {
 					
 					if(interpolationStage) {
 						
-						outputFileFPS *= 2;
+						outputFileFPS *= 2f;
 						
 						// path to output files
 						String java_scaled_frames_out_location = (currentFileTempFolderPath + "/frames_" + Utils.addZerosToName(frame_stage_idx, 2) + "_scaled_by_java");
@@ -178,7 +358,7 @@ public class FileProcessor {
 						//ProgramLogic.folderStatusWatcher(fileData.setCurrentProcessingStage(curStep), CURRENT_STAGE_INPUT_FRAMES_FILES_LOCATION_PATH, java_scaled_frames_out_location, curStep, maxSteps, false);
 						int[] status = new int[1];
 						ProgramLogic.runJavaImageScalerWatcher(fileData.setCurrentProcessingStage(curStep), status, CURRENT_STAGE_INPUT_FRAMES_FILES_LOCATION_PATH, curStep, maxSteps);
-						if(ImageProcessor.scaleImagesToSize(CURRENT_STAGE_INPUT_FRAMES_FILES_LOCATION_PATH, java_scaled_frames_out_location, 1280, 720, Configuration.THREADS, status)) {
+						if(ImageProcessor.scaleImagesToSize(CURRENT_STAGE_INPUT_FRAMES_FILES_LOCATION_PATH, java_scaled_frames_out_location, 1280, 720, Configuration.THREADS, status, null)) {
 							// store this value for next step as input source
 							CURRENT_STAGE_INPUT_FRAMES_FILES_LOCATION_PATH = java_scaled_frames_out_location;
 							
@@ -219,7 +399,7 @@ public class FileProcessor {
 						// integer holder, aka pointer, for number of currently processed files by java image scaler
 						int[] status = new int[1];
 						ProgramLogic.runJavaImageScalerWatcher(fileData.setCurrentProcessingStage(curStep), status, CURRENT_STAGE_INPUT_FRAMES_FILES_LOCATION_PATH, curStep, maxSteps);
-						if(ImageProcessor.scaleImagesToSize(CURRENT_STAGE_INPUT_FRAMES_FILES_LOCATION_PATH, java_scaled_frames_out_location, targetW, targetH, Configuration.THREADS, status)) {
+						if(ImageProcessor.scaleImagesToSize(CURRENT_STAGE_INPUT_FRAMES_FILES_LOCATION_PATH, java_scaled_frames_out_location, targetW, targetH, Configuration.THREADS, status, null)) {
 							// store this value for next step as input source
 							CURRENT_STAGE_INPUT_FRAMES_FILES_LOCATION_PATH = java_scaled_frames_out_location;
 							
@@ -308,8 +488,8 @@ public class FileProcessor {
 								targetH = 720;
 							}
 							else {
-								targetW = curFileSettings.outW;
-								targetH = curFileSettings.outH;
+								targetW = finTargetW;
+								targetH = finTargetH;
 							}
 							
 							if(framesSizeBad || ProgramLogic.needScalingStage(CURRENT_STAGE_INPUT_FRAMES_FILES_LOCATION_PATH, targetW, targetH)) {
@@ -366,8 +546,8 @@ public class FileProcessor {
 							}
 							
 							// reset target size
-							targetW = curFileSettings.outW;
-							targetH = curFileSettings.outH;
+							targetW = finTargetW;
+							targetH = finTargetH;
 						}
 						else if(!upscalingStage) {
 							//System.out.println("HERE B");

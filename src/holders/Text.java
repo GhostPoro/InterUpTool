@@ -73,10 +73,42 @@ public class Text {
 	/** Human readable full name of tool */
 	public static final String TOOL_NAME_FULL  = "Pictures and Video, Interpolating and Up-scaling Tool";
 	/** Version of tool */
-	public static final String TOOL_VERSION    = "v0.02";
+	public static final String TOOL_VERSION    = "v0.04";
 	
-	/** String of help snippet for console mode application */
-	public static final String DEFAULT_SETTINGS_FILE_STRING = 
+	/** Full template of User settings file in form of String */
+	public static final String DEFAULT_USER_SETTINGS_FILE_STRING =
+			//*
+			"# Please do not to change program settings by editing this file,\n" +
+			"# because it will be overridden by Tool, in next run.\n" +
+			"# This is automatically generated users settings file\n" +
+			"# for $TOOL_NAME_SHORT$ $TOOL_VERSION$\n" +
+			"# ($TOOL_NAME_FULL$).\n" +
+			"img_scale_option=$IMG_SCALE_OPT$\n" +
+			"img_preset_option=$IMG_PRESET_OPT$\n" +
+			"img_scale_factor=$IMG_SCALE_FACTOR$\n" +
+			"img_target_size_w=$IMG_SIZE_W$\n" +
+			"img_target_size_h=$IMG_SIZE_H$\n" +
+					
+			"anim_scale_option=$ANIM_SCALE_OPT$\n" +
+			"anim_preset_option=$ANIM_PRESET_OPT$\n" +
+			"anim_scale_factor=$ANIM_SCALE_FACTOR$\n" +
+			"anim_target_size_w=$ANIM_SIZE_W$\n" +
+			"anim_target_size_h=$ANIM_SIZE_H$\n" +
+					
+			"upscale_by_java=$JAVA_UPSCALING$\n" +
+					
+			"interpolate=$WANT_INTERPOLATE$\n" +
+					
+			"restore_oroginal_fps=$RESTORE_FPS$\n" +
+					
+			"scale_by_ffmpeg=$SCALE_WITH_FFMPEG$\n" +
+					
+			"ffmpeg_custom_filters_cmd=$FFMPEG_FILTERS_STRING$\n" +
+					
+			"remove_temp_files=$IS_NEED_REMOVE_TEMP_FILES$"; // */
+			
+	/** Full template of Tool configuration file in form of String */
+	public static final String DEFAULT_CONFIGURATION_FILE_STRING =
 			//*
 			"# This automatically generated parameters file for $TOOL_NAME_SHORT$ $TOOL_VERSION$\n" +
 			"# ($TOOL_NAME_FULL$).\n\n\n" +
@@ -255,7 +287,10 @@ public class Text {
 	 		"$VIDEO_PROCESSING_STAGE_CONVERT_FRAMES_TO_VIDEO$ = $FFMPEG_EXEC_FILE_PATH$ -r $OUTPUT_VIDEO_FILE_FPS$ -i $CURRENT_STAGE_INPUT_FRAMES_FILES_LOCATION_PATH$/$FRAMES_STORING_FORMAT$ -i $TEMP_FILES_FOLDER$/temp_file$TEMP_AUDIO_END_FILE_NAME_EXTRACT$ $VIDEO_ENCODE_LIB$ $VIDEO_SCALING_VALUE$ -c:a copy $CURRENT_STAGE_OUTPUT_VIDEO_FILE_PATH$\n\n" +
 	 		
 	 		"# Change FPS back to original.\n" +
-	 		"#$VIDEO_PROCESSING_STAGE_RESTORE_SOURCE_FPS$ = $FFMPEG_EXEC_FILE_PATH$ -i $CURRENT_STAGE_INPUT_VIDEO_FILE_PATH$ $VIDEO_ENCODE_LIB$ -vf fps=$SOURCE_VIDEO_FILE_FPS$ -c:a copy $CURRENT_STAGE_OUTPUT_VIDEO_FILE_PATH$";
+	 		"#$VIDEO_PROCESSING_STAGE_RESTORE_SOURCE_FPS$ = $FFMPEG_EXEC_FILE_PATH$ -i $CURRENT_STAGE_INPUT_VIDEO_FILE_PATH$ $VIDEO_ENCODE_LIB$ -vf fps=$SOURCE_VIDEO_FILE_FPS$ -c:a copy $CURRENT_STAGE_OUTPUT_VIDEO_FILE_PATH$\n\n" +
+	 		
+	 		"# Simple Image up-scaling sequence:\n" +
+	 		"$IMAGE_PROCESSING_STAGE_UPSCALING$ = $UPSCALER_AI_APP_PATH$ -i $INPUT_IMAGE_CURRENT_STAGE_FILE_PATH$ -o $OUTPUT_IMAGE_CURRENT_STAGE_FILE_PATH$ -n realesrgan-x4plus -s $UPSCALER_AI_SCALE_FACTOR$ -f $INPUT_IMAGE_EXTENSION$";
 
 //*/
 

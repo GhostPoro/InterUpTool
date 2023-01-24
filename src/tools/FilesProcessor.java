@@ -10,8 +10,7 @@ import hud.UpdatableTableModel;
 public class FilesProcessor {
 	
 	public static boolean process(UpdatableTableModel model, List<RowData> fileList) {
-		// TODO: Make it somewhere else
-		Configuration.SETTINGS = new CurrentSessionFilesProcessingSettings();
+
 		
 		CurrentSessionFilesProcessingSettings sessionSettingsForFiles = Configuration.SETTINGS;
 		
@@ -32,7 +31,7 @@ public class FilesProcessor {
 			RowData fileData = fileList.get(i);
 			if(fileData.isReadyToProcess()) {
 				filesReadyToProcessCounter++;
-				if(FileProcessor.process(startFileStatusUpdater(model, fileData.setInProcess(true).setStatus(0).setTargetStatus(0).setFileProgressStage("0/0/0 of 0")), sessionSettingsForFiles)) {
+				if(FileProcessor.process(startFileStatusUpdater(model, fileData.setInProcess(true).setStatus(0).setTargetStatus(0).setFileProgressStage("Calculating...")), sessionSettingsForFiles)) {
 					filesSuccessfullyProcessedCounter++;
 				}
 				fileData.endProcessingTime();

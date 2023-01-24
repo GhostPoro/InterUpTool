@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.JLabel;
+
 import core.ProgramLogic;
 
 public class Configuration {
@@ -14,7 +16,7 @@ public class Configuration {
 	public final static int windowInitWidth  = 720;
 	public final static int windowInitHeight = 500;
 	
-	public final static String[] validImageExtensions = new String[] { "jpeg", "jpg", "png" };
+	public final static String[] validImageExtensions = new String[] { "jpeg", "jpg", "png", "webp" };
 	
 	public static final int MAX_RECURTION_DEPTH = 16;
 	
@@ -26,7 +28,14 @@ public class Configuration {
 	public static final List<TFVAR> VARS_TO_IMAGE_PROCESSING = new ArrayList<TFVAR>();
 	public static final List<TFVAR> VARS_TO_APNG_PROCESSING  = new ArrayList<TFVAR>();
 	public static final List<TFVAR> VARS_TO_GIF_PROCESSING   = new ArrayList<TFVAR>();
+	public static final List<TFVAR> VARS_TO_WPANM_PROCESSING = new ArrayList<TFVAR>();
+	
+	// TODO: Find (maybe) another way to do it
+	public static final JLabel INFOLABELTOOLS = new JLabel("");
+	public static final JLabel INFOLABELIMAGE = new JLabel("");
+	public static final JLabel INFOLABELANIMS = new JLabel("");
 
+	
 	public static ToolOptions OPTIONS;
 	
 	public static CurrentSessionFilesProcessingSettings SETTINGS;
@@ -35,8 +44,11 @@ public class Configuration {
 	
 	public static final OS os = ProgramLogic.getOperetionSystemType();
 	
-	/** Error message in case of inability to create or read core program settings file. */
+	/** Global configuration file path for entire Tool. */
 	public static final String CORE_CONFIG_FILE_PATH = "./iutool_settings.conf";
+	
+	/** Files processing configuration file for user chosen file processing preferences (optional). */
+	public static final String SESSION_CONFIG_FILE_PATH = "./session_settings.conf";
 	
 	/** Predefined folder path for temporally storing files. */
 	public static final String DEFAULT_TEMP_FILES_FOLDER_LOCATION = "./tempuitoolfiles";
@@ -62,7 +74,9 @@ public class Configuration {
 			"CURRENT_STAGE_OUTPUT_VIDEO_FILE_PATH",
 			"CURRENT_STAGE_INPUT_FRAMES_FILES_LOCATION_PATH",
 			"CURRENT_STAGE_OUTPUT_FRAMES_FILES_LOCATION_PATH",
-			"UPSCALER_AI_SCALE_FACTOR"
+			"UPSCALER_AI_SCALE_FACTOR",
+			
+			"IMAGE_PROCESSING_STAGE_UPSCALING"
 	};
 	
 	/** HAshMap of default values for core variables */

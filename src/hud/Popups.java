@@ -53,7 +53,7 @@ public class Popups {
 			}
 			else if(userConfigAnswer == 2) {
 				if(!opts.canProcess()) {
-					String configText = TextProcessor.restoreVarsValues(TextProcessor.overrideVARs(Text.DEFAULT_SETTINGS_FILE_STRING, Configuration.VARS_TO_OVERRIDE_IN_CONFIG));
+					String configText = TextProcessor.restoreVarsValues(TextProcessor.overrideVARs(Text.DEFAULT_CONFIGURATION_FILE_STRING, Configuration.VARS_TO_OVERRIDE_IN_CONFIG));
 					Utils.writeLinesToFile(Configuration.CORE_CONFIG_FILE_PATH, configText);
 					System.out.println("Configuration file fixed. (A)");
 				}

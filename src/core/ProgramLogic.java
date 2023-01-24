@@ -3,6 +3,8 @@ package core;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -15,6 +17,7 @@ import holders.CurrentSessionFilesProcessingSettings;
 import holders.RowData;
 import holders.TFVAR;
 import tools.ImageProcessor;
+import tools.Logger;
 import tools.Utils;
 
 public class ProgramLogic {
@@ -149,6 +152,51 @@ public class ProgramLogic {
 			}
 		}
 		return false;
+	}
+	
+	public static int[] needScalingStage(String location, int targetW, int targetH, int[] holder) {
+		File framesFolder = new File(location);
+		
+		System.out.println("Image Path: " + location + " EXIST: " + framesFolder.exists());
+		
+		String filePath = null;
+		
+		if(framesFolder.exists()) {
+			if(framesFolder.isDirectory()) {
+				File[] filesInside = framesFolder.listFiles();
+				if(filesInside != null) {
+					boolean noFile = true;
+					int size = filesInside.length;
+					for (int fi = 0; fi < size && noFile; fi++) {
+						File curFile = filesInside[fi];
+						if(curFile.isFile()) {
+							noFile = false;
+							filePath = curFile.getAbsolutePath();
+						}
+					}
+				}
+			}
+		}
+		else {
+			filePath = location;
+		}
+		
+		if(filePath != null) {
+			BufferedImage image = ImageProcessor.loadFromFile(filePath);
+			//System.out.println("RW :" + image.getWidth() + " TW: " + targetW + " RH :" + image.getHeight() + " TH: " + targetH);
+			if(image != null) {
+				int sourceW = image.getWidth();
+				int sourceH = image.getHeight();
+				if(sourceW < targetW || sourceH < targetH) {
+					return new int[] { sourceW, sourceH };
+				}
+				else {
+					return null;
+				}
+			}
+		}
+		
+		return null;
 	}
 	
 	public static boolean folderStatusWatcher(final RowData row, String sourceFolderPath, String targetFolderPath, int curStage, int endStage, boolean multiply) {
@@ -552,7 +600,7 @@ public class ProgramLogic {
 		return true;
 	}
 	
-	private static float updateRowStatus(RowData row, float endS, float curS, float inc) {
+	public static float updateRowStatus(RowData row, float endS, float curS, float inc) {
 		float fileStatus = (1f / endS * ((curS - 1f) + inc));
 		if(fileStatus >= 1f) {
 			row.setTargetStatus(0.992f);

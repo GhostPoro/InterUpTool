@@ -3,6 +3,7 @@ package tools;
 import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -245,6 +246,31 @@ public class Utils {
     public static int[] listIntToArray(List<Integer> list) {
         int[] result = list.stream().mapToInt((Integer v) -> v).toArray();
         return result;
+    }
+    
+    public static int clamp(int min, int max, int val) {
+		if(val < min) { return min; }
+		if(val > max) { return max; }
+		return val;
+	}
+	
+	public static boolean copyFile(String sourceFilePath, String targetFilePath) {
+        try (FileInputStream input = new FileInputStream(sourceFilePath)) {
+            try (FileOutputStream output = new FileOutputStream(targetFilePath)) {
+                byte[] buffer = new byte[1024]; int length;
+                while ((length = input.read(buffer)) > 0) {
+                    output.write(buffer, 0, length);
+                }
+                if(Logger.logLevelAbove(2)) {
+                	System.out.println("Copy File " + sourceFilePath + " -> " + targetFilePath + " Done!");
+                }
+                return true;
+            }
+        } catch (IOException ioe) {
+            System.err.println("An error occurred while copying the file: " + sourceFilePath);
+            ioe.printStackTrace();
+        }
+        return false;
     }
     
 	public static boolean deleteDirectory(File dir) {

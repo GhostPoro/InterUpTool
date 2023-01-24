@@ -57,24 +57,48 @@ public class AdvDnDPane extends JScrollPane implements DropTargetListener {
 			Transferable t = dtde.getTransferable();
 			List<File> processList = updTableModel.getProcessingFileList();
 			if (t.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+				
+				Object dropData = null;
+				
 				try {
-					Object dropData = t.getTransferData(DataFlavor.javaFileListFlavor);
-					if (dropData instanceof List) {
-						
-						state = DragState.ACCEPT;
-						
-						List<Object> dropDataList = ((List<Object>) dropData);
-						
-						for (Object data : dropDataList) {
-							if (data instanceof File) {
-								if(addToProcessList(((File) data), ".jpg", ".jpeg", ".png", ".gif", ".webp", ".mp4", ".mkv", ".flv", ".avi", ".wmv", ".fid")) {
-									this.updTableModel.setListChanged(true);
-								}
+					dropData = t.getTransferData(DataFlavor.javaFileListFlavor);
+				}
+				catch (UnsupportedFlavorException ufe) {
+					ufe.printStackTrace();
+				}
+				catch (IOException ioe) {
+					if(ioe.getMessage().contains("Owner")) {
+						int atempts = 0;
+						while(atempts < 3) {
+							try {
+								dropData = t.getTransferData(DataFlavor.javaFileListFlavor);
+							}
+							catch (UnsupportedFlavorException ufe) {
+								ufe.printStackTrace();
+							}
+							catch (IOException e) {}
+							try { Thread.sleep(50); } catch (InterruptedException e) { e.printStackTrace(); }
+							atempts++;
+						}
+					}
+					else {
+						ioe.printStackTrace();
+					}
+				}
+				
+				if (dropData != null && (dropData instanceof List)) {
+					
+					state = DragState.ACCEPT;
+					
+					List<Object> dropDataList = ((List<Object>) dropData);
+					
+					for (Object data : dropDataList) {
+						if (data instanceof File) {
+							if(addToProcessList(((File) data), ".jpg", ".jpeg", ".png", ".gif", ".webp", ".mp4", ".mkv", ".flv", ".avi", ".wmv", ".fid")) {
+								this.updTableModel.setListChanged(true);
 							}
 						}
 					}
-				} catch (UnsupportedFlavorException | IOException ex) {
-					ex.printStackTrace();
 				}
 			}
 			

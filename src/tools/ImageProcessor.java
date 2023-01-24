@@ -25,7 +25,7 @@ public class ImageProcessor {
 	
 	private static final boolean DEBUG = false;
 	
-	public static boolean scaleImagesToSize(String sourcePath, String outPath, int desiredWidthInt, int desiredHeightInt, final int threadsNum, int[] status) {
+	public static boolean scaleImagesToSize(String sourcePath, String outPath, int desiredWidthInt, int desiredHeightInt, final int threadsNum, int[] status, int[] outSize) {
 		File sourceResource = new File(sourcePath);
 		
 		final boolean processingInSingleFileMode = (sourceResource.exists() && sourceResource.isFile());
@@ -98,12 +98,6 @@ public class ImageProcessor {
 			if(sourceResource.getAbsolutePath().equals(new File(outFileLocation + "/" + outFileName + "." + outFileExt).getAbsolutePath())) {
 				outFileName += ("_" + System.currentTimeMillis());
 			}
-			
-//			System.out.println("ImageProcessor.scaleImagesToSize: Name: "     + outFileName);
-//			System.out.println("ImageProcessor.scaleImagesToSize: Ext: "      + outFileExt);
-//			System.out.println("ImageProcessor.scaleImagesToSize: Location: " + outFileLocation);
-//			System.exit(0);
-			
 		}
 		else { // folder processing
 			
@@ -195,7 +189,7 @@ public class ImageProcessor {
 		
 		int blackColor = toColor(0, 0, 0, 0);
 		
-		final int[] threadsStatus = new int[threadsNum];
+		final int[] threadsStatus     = new int[threadsNum];
 		final int[] prevThreadsStatus = new int[threadsNum];
 		
 		if(Logger.logLevelAbove(2) || DEBUG) {
@@ -206,19 +200,19 @@ public class ImageProcessor {
 			System.out.println("From: " + realImgWidthInt + "x" + realImgHeightInt + " To: " + finScaledTargetWidthInt + "x" + finScaledTargetHeightInt);
 		}
 		
-		if(desiredWidthInt > scaledTargetWidthInt) {
+		if(desiredWidthInt > finScaledTargetWidthInt) {
 			int halfDiff = ((int)((desiredWidthFlt - scaledTargetWidthFlt) / 2f));
 
 			/* ####################################### PER IMAGE PART START ####################################### */
 			if(processingInSingleFileMode) {
-				BufferedImage img = loadFromFile(sourcePath);
-				
-				int[][] imageArray = loadAsArray(resizeImage(img, scaledTargetWidthInt, scaledTargetHeightInt, imageHasAlpha, true));
+				int[][] imageArray = loadAsArray(resizeImage(firstFrameToAnalyze, finScaledTargetWidthInt, finScaledTargetHeightInt, imageHasAlpha, true));
 				int[][] outarr = new int[desiredWidthInt][desiredHeightInt];
+				
+				int sxmax = imageArray[0].length;
 				
 				for (int y = 0; y < desiredHeightInt; y++) {
 					for (int x = 0, sx = 0; x < desiredWidthInt; x++) {
-						if(halfDiff < x && sx < scaledTargetWidthInt) {
+						if(halfDiff < x && sx < finScaledTargetHeightInt && sx < sxmax) {
 							outarr[x][y] = imageArray[y][sx];
 							sx++;
 						}
@@ -229,7 +223,7 @@ public class ImageProcessor {
 				}
 				
 				BufferedImage outImg = createImage(outarr, imageHasAlpha);
-				save(outImg, outFileExt, outFileLocation + "/" + outFileName);
+				save(outImg, outFileExt, outFileLocation + "/" + outFileName, outSize);
 			}
 			else {
 				
@@ -255,9 +249,11 @@ public class ImageProcessor {
 									int[][] imageArray = loadAsArray(resizeImage(img, finScaledTargetWidthInt, finScaledTargetHeightInt, imageHasAlpha, true));
 									int[][] outarr = new int[desiredWidthInt][desiredHeightInt];
 									
+									int sxmax = imageArray[0].length;
+									
 									for (int y = 0; y < desiredHeightInt; y++) {
 										for (int x = 0, sx = 0; x < desiredWidthInt; x++) {
-											if(halfDiff < x && sx < finScaledTargetWidthInt) {
+											if(halfDiff < x && sx < finScaledTargetWidthInt && sx < sxmax) {
 												outarr[x][y] = imageArray[y][sx];
 												sx++;
 											}
@@ -271,7 +267,7 @@ public class ImageProcessor {
 									
 									String[] outputFilsNameParts = generateFullFileName(imagePath, false);
 									
-									save(outImg, outputFilsNameParts[1], outputFolderPath + "/" + outputFilsNameParts[0]);
+									save(outImg, outputFilsNameParts[1], outputFolderPath + "/" + outputFilsNameParts[0], outSize);
 									threadsStatus[startCountFrom] = imgIdx;
 									updateProgressStatus(status, imgIdx);
 								}
@@ -285,20 +281,21 @@ public class ImageProcessor {
 			
 			/* ######################################## PER IMAGE PART END ######################################## */
 		}
-		else if(desiredHeightInt > scaledTargetHeightInt) {
+		else if(desiredHeightInt > finScaledTargetHeightInt) {
 			int halfDiff = ((int)((desiredHeightFlt - scaledTargetHeightFlt) / 2f));
 
 			/* ####################################### PER IMAGE PART START ####################################### */
 			
 			if(processingInSingleFileMode) {
-				BufferedImage img = loadFromFile(sourcePath);
 				
-				int[][] imageArray = loadAsArray(resizeImage(img, scaledTargetWidthInt, scaledTargetHeightInt, imageHasAlpha, true));
+				int[][] imageArray = loadAsArray(resizeImage(firstFrameToAnalyze, finScaledTargetWidthInt, finScaledTargetHeightInt, imageHasAlpha, true));
 				int[][] outarr = new int[desiredWidthInt][desiredHeightInt];
+				
+				int symax = imageArray.length;
 				
 				for (int x = 0; x < desiredWidthInt; x++) {
 					for (int y = 0, sy = 0; y < desiredHeightInt; y++) {
-						if(y > halfDiff && sy < scaledTargetHeightInt) {
+						if(y > halfDiff && sy < finScaledTargetHeightInt && sy < symax) {
 							outarr[x][y] = imageArray[sy][x];
 							sy++;
 						}
@@ -308,7 +305,7 @@ public class ImageProcessor {
 					}
 				}
 				BufferedImage outImg = createImage(outarr, imageHasAlpha);
-				save(outImg, outFileExt, outFileLocation + "/" + outFileName);
+				save(outImg, outFileExt, outFileLocation + "/" + outFileName, outSize);
 			}
 			else {
 				final int processListSize = pathesToProcess.size();
@@ -333,9 +330,11 @@ public class ImageProcessor {
 									int[][] imageArray = loadAsArray(resizeImage(img, finScaledTargetWidthInt, finScaledTargetHeightInt, imageHasAlpha, true));
 									int[][] outarr = new int[desiredWidthInt][desiredHeightInt];
 									
+									int symax = imageArray.length;
+									
 									for (int x = 0; x < desiredWidthInt; x++) {
 										for (int y = 0, sy = 0; y < desiredHeightInt; y++) {
-											if(y > halfDiff && sy < finScaledTargetHeightInt) {
+											if(y > halfDiff && sy < finScaledTargetHeightInt && sy < symax) {
 												outarr[x][y] = imageArray[sy][x];
 												sy++;
 											}
@@ -348,7 +347,7 @@ public class ImageProcessor {
 									
 									String[] outputFilsNameParts = generateFullFileName(imagePath, false);
 									
-									save(outImg, outputFilsNameParts[1], outputFolderPath + "/" + outputFilsNameParts[0]);
+									save(outImg, outputFilsNameParts[1], outputFolderPath + "/" + outputFilsNameParts[0], outSize);
 									threadsStatus[startCountFrom] = imgIdx;
 									updateProgressStatus(status, imgIdx);
 								}
@@ -365,9 +364,8 @@ public class ImageProcessor {
 		else {
 			/* ####################################### PER IMAGE PART START ####################################### */
 			if(processingInSingleFileMode && Configuration.PROCESSING) {
-				BufferedImage img = loadFromFile(sourcePath);
-				BufferedImage outImg = resizeImage(img, scaledTargetWidthInt, scaledTargetHeightInt, imageHasAlpha, false);
-				save(outImg, outFileExt, outFileLocation + "/" + outFileName);
+				BufferedImage outImg = resizeImage(firstFrameToAnalyze, finScaledTargetWidthInt, finScaledTargetHeightInt, imageHasAlpha, false);
+				save(outImg, outFileExt, outFileLocation + "/" + outFileName, outSize);
 			}
 			else {
 				final int processListSize = pathesToProcess.size();
@@ -389,7 +387,7 @@ public class ImageProcessor {
 									BufferedImage img = loadFromFile(imagePath);
 									BufferedImage outImg = resizeImage(img, finScaledTargetWidthInt, finScaledTargetHeightInt, imageHasAlpha, false);
 									String[] outputFilsNameParts = generateFullFileName(imagePath, false);
-									save(outImg, outputFilsNameParts[1], outputFolderPath + "/" + outputFilsNameParts[0]);
+									save(outImg, outputFilsNameParts[1], outputFolderPath + "/" + outputFilsNameParts[0], outSize);
 									threadsStatus[startCountFrom] = imgIdx;
 									updateProgressStatus(status, imgIdx);
 								}
@@ -402,6 +400,10 @@ public class ImageProcessor {
 			}
 			
 			/* ######################################## PER IMAGE PART END ######################################## */
+		}
+		
+		if(processingInSingleFileMode) {
+			return Configuration.PROCESSING;
 		}
 		
 		int maxErrors = 30; // 30 sec time out
@@ -547,11 +549,17 @@ public class ImageProcessor {
     }
     
     public static BufferedImage save(BufferedImage image) {
-    	return save(image, "png", "autoName");
+    	return save(image, "png", "autoName", null);
     }
     
-    public static BufferedImage save(BufferedImage image, String type, String name) {
+    public static BufferedImage save(BufferedImage image, String type, String name, int[] imageSize) {
     	type = ((type == null) ? "png" : type);
+    	
+    	if(imageSize != null && imageSize.length > 1) {
+    		imageSize[0] = image.getWidth();
+    		imageSize[1] = image.getHeight();
+    	}
+    	
         try {
         	
         	String ext = ("." + type);

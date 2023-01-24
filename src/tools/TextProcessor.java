@@ -170,6 +170,9 @@ public class TextProcessor {
 						else if(varName.startsWith("GIF_PROCESSING_STAGE")) {
 							Configuration.VARS_TO_GIF_PROCESSING.add(configVar);
 						}
+						else if(varName.startsWith("WPANM_PROCESSING_STAGE")) {
+							Configuration.VARS_TO_WPANM_PROCESSING.add(configVar);
+						}
 					}
 					else { // if there was a variable with this name -> re-define its value
 						configVar.setValue(varValue);
@@ -358,7 +361,11 @@ public class TextProcessor {
 	}
 	
 	public static boolean parseBoolean(TFVAR var) {
-		String value = var.getValue().trim();
+		return parseBoolean(var.getValue());
+	}
+	
+	public static boolean parseBoolean(String str) {
+		String value = str.trim();
 		try {
 			int num = Integer.parseInt(value);
 			return (num > 0);
@@ -366,6 +373,11 @@ public class TextProcessor {
 		catch (NumberFormatException  e) {}
 		value = value.toLowerCase();
 		return (value.startsWith("y") || value.startsWith("t"));
+	}
+	
+	public static int stringToInt(String str, int def) {
+		if(str != null) { int out = def; try { out = Integer.parseInt(str); } catch (NumberFormatException e) {} return out; }
+		return def;
 	}
 
 }

@@ -3,7 +3,7 @@ GUI Tool for control, queue and automate video enhancing process, provided by FF
 
 # Inference
 <p align="center">
-  <img src="gitdocs/imgs/program_interface.jpg" height=400>
+  <img src="gitdocs/imgs/program_interface.jpg" height=400><img src="gitdocs/imgs/user_settings_interface.jpg" height=400>
 </p>
 
 ## Run parameters
@@ -28,5 +28,4 @@ Usage: java -jar ./interuptool_v0.02.jar [options]...
 
 # WIP:
 - Dark Theme
-- Static images upscaling (jpg/png/webp)
 - Animated images upscaling (gif/apng/webp)
