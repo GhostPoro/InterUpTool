@@ -3,7 +3,7 @@ GUI Tool for control, queue and automate video enhancing process, provided by FF
 
 # Inference
 <p align="center">
-  <img src="gitdocs/imgs/program_interface.jpg" height=400><img src="gitdocs/imgs/user_settings_interface.jpg" height=400>
+  <img src="gitdocs/imgs/program_interface.jpg" height=320><img src="gitdocs/imgs/user_settings_interface.jpg" height=320>
 </p>
 
 ## Run parameters
