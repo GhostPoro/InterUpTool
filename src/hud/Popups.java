@@ -29,7 +29,7 @@ public class Popups {
 	private static JTextArea CURRENT_runtimeErrorLogsPopup_TextArea = null;
 	private static JScrollPane CURRENT_runtimeErrorLogsPopup_ScrollPane = null;
 	
-	public static ToolOptions configWarning(ToolOptions opts) {
+	public static ToolOptions configWarning(ToolOptions opts, final String[] args) {
 		Object[] options = { "Reload Config", "Open Config File", "Try to fix config file", "Close Application" };
 		String windowName = "Configuration Error";
 		String windowQuestion = null;
@@ -42,7 +42,7 @@ public class Popups {
 			userConfigAnswer = JOptionPane.showOptionDialog(null, windowQuestion, windowName, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[1]);
 			
 			if(userConfigAnswer == 0) { // Read config again
-				opts = ToolOptions.load(null);
+				opts = ToolOptions.load(args);
 			}
 			else if(userConfigAnswer > 2 || userConfigAnswer < 0) { // Cancel -> Exit from program
 				System.err.println("User did not provide access to FFMPEG executable via config file. Exiting...");

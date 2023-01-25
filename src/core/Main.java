@@ -1,7 +1,5 @@
 package core;
 
-import java.awt.Color;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,9 +11,6 @@ import holders.ToolOptions;
 import holders.Text;
 import hud.UpdatableTableModel;
 import hud.WindowLayout;
-import tools.ImageProcessor;
-import tools.ProcessHandler;
-import tools.Utils;
 
 public class Main {
 
@@ -59,7 +54,7 @@ public class Main {
 			Configuration.OPTIONS = options;
 //			System.exit(0);
 			fileList = new ArrayList<File>();
-			new WindowLayout(new UpdatableTableModel(fileList));
+			new WindowLayout(new UpdatableTableModel(fileList), args);
 		}
 		else {
 			if(consoleMode) {

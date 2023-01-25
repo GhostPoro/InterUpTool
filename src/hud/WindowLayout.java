@@ -35,12 +35,12 @@ public class WindowLayout {
 
 	private final UpdatableTableModel updTableModel;
 
-	public WindowLayout(UpdatableTableModel inUTModel) {
+	public WindowLayout(UpdatableTableModel inUTModel, final String[] args) {
 		this.updTableModel = inUTModel;
 		
 		// check if User provide access to FFMPEG executable
 		if(!Configuration.OPTIONS.canProcess()) {
-			Configuration.OPTIONS = Popups.configWarning(Configuration.OPTIONS);
+			Configuration.OPTIONS = Popups.configWarning(Configuration.OPTIONS, args);
 		}
 		
 		final ToolOptions dummyOpts = Configuration.OPTIONS;
