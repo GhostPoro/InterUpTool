@@ -45,7 +45,7 @@ public class Main {
 		
 		// test room
 		//Configuration.PROCESSING = true;
-		args = new String[] { "-vvv" };
+		//args = new String[] { "-vvv" };
 		//System.exit(0);
 		
 		/* Process basic supplied arguments. */
