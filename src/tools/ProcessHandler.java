@@ -14,6 +14,15 @@ public class ProcessHandler {
 	
 	public static boolean DEBUG = false;
 	
+	/**
+	 * 
+	 * @param cmd             - command to execute
+	 * @param killLine        - string in output, after which process forcefully will be killed
+	 * @param waitForFinish   - if true, ProcessHandler will wait (and thread in which it was runned), and control (to kill) manually running process, otherwise you can skip requested result, if process output slower than main app running
+	 * @param singleRequeest  - this flag required to IGNORE 'Configuration.PROCESSING' application status for commands execution, otherwise execution will not processed
+	 * @param outputs         - storage (Strings array size of 2) where output will be stored in simple string way
+	 * @return supplied 'outputs' array[2] of strings in normal/error outputs from runned inside application
+	 */
 	public static String[] run(final String cmd, final String killLine, final boolean waitForFinish, final boolean singleRequeest) {
 		final String[] outputs = new String[2];
 		List<String> appOutputNormal = new ArrayList<String>();
@@ -26,6 +35,17 @@ public class ProcessHandler {
 		return result;
 	}
 	
+	/**
+	 * 
+	 * @param cmd             - command to execute
+	 * @param killLine        - string in output, after which process forcefully will be killed
+	 * @param waitForFinish   - if true, ProcessHandler will wait (and thread in which it was runned), and control (to kill) manually running process, otherwise you can skip requested result, if process output slower than main app running
+	 * @param singleRequeest  - this flag required to IGNORE 'Configuration.PROCESSING' application status for commands execution, otherwise execution will not processed
+	 * @param appOutputNormal - advanced storage of ArrayList for storing output of application normal output. One element per line
+	 * @param appOutputErrors - advanced storage of ArrayList for storing output of application errors output. One element per line
+	 * @param outputs         - storage (Strings array size of 2) where output will be stored in simple string way
+	 * @return supplied 'outputs' array[2] of strings in normal/error outputs from runned inside application
+	 */
 	public static String[] run(final String cmd, final String killLine, final boolean waitForFinish, final boolean singleRequeest, final List<String> appOutputNormal, final List<String> appOutputErrors, final String[] outputs) {
 		Process process = null;
 		
@@ -181,6 +201,16 @@ public class ProcessHandler {
 			return true;
 		}
 		return false;
+	}
+	
+	public static String[] destroy(String[] outs) {
+		if(outs != null && outs.length == 2) {
+			outs[0] = null;
+			outs[1] = null;
+			outs = null;
+			return null;
+		}
+		return null;
 	}
 
 }

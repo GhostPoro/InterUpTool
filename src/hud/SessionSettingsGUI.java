@@ -526,7 +526,7 @@ public class SessionSettingsGUI extends JDialog {
 			int imgH  = 1440;
 			
 			if(imgScaleOpt == 1) {
-				switch (imgScaleOpt) {
+				switch (imgPresetOpt) {
 					case  0 : imgW =  854; imgH =  480; break;
 					case  1 : imgW = 1280; imgH =  720; break;
 					case  2 : imgW = 1920; imgH = 1080; break;

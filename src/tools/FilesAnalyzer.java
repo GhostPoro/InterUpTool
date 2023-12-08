@@ -7,6 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import holders.Configuration;
+import holders.Text;
 import holders.ToolOptions;
 import hud.Popups;
 import hud.UpdatableTableModel;
@@ -44,44 +45,43 @@ public class FilesAnalyzer {
 
 					while (myTasks.size() > 0) {
 						File fileToProcess = myTasks.get(0);
-
+						
 						String filePath = fileToProcess.getAbsolutePath();
 						
-//						(((fileExt.length() > 0) ? (fileExt + ": ") : (filePath + ":"))))
-//						String fileExt = Utils.getExtensionFromPath(filePath);
-
+						//boolean notWEBP = !filePath.toLowerCase().endsWith("webp");
+						
+						final long taskID = model.getRowByPath(filePath).uniqueID;
+						
 						String[] output = ProcessHandler.run(Utils.quotePath(testerExec) + " -i " + Utils.quotePath(filePath), null, true, true);
 						
-//						System.out.println(output[0]);
-//						System.out.println(output[1]);
-
 						if (contains(output, 1, "Duration:") || contains(output, 1, "Video:")) {
-							model.setFileProperties(filePath, extractData(output[1]), true);
+							model.setFileProperties(taskID, extractData(output[1], filePath), true);
 						} else if (contains(output, 0, "Duration:") || contains(output, 0, "Video:")) {
-							model.setFileProperties(filePath, extractData(output[0]), true);
+							model.setFileProperties(taskID, extractData(output[0], filePath), true);
 						} else {
 							if (contains(output, 1, (filePath + ":"))) {
 								extractAndLogError(output[1], filePath);
-								model.setFileProperties(filePath, "INVALID_FILE_DATA", true);
+								model.setFileProperties(taskID, "INVALID_FILE_DATA", false);
 							} else if (contains(output, 0, (filePath + ":"))) {
 								extractAndLogError(output[0], filePath);
-								model.setFileProperties(filePath, "INVALID_FILE_DATA", true);
+								model.setFileProperties(taskID, "INVALID_FILE_DATA", false);
 							} else {
-								String errrOutputLine = "FilesAnalyzer Error! FFMPEG can't retrieve information about file:\n" + filePath + ".\nReason: Invalid path to file.\n";
+								String errrOutputLine = Text.FILESANALYZER_ERROR_MAIN_THREAD.replace("$FILE_PATH$", filePath);
 								Logger.tempLog.append(errrOutputLine);
-								model.setFileProperties(filePath, "CANT_retrieve_FILE_INFO", true);
+								model.setFileProperties(taskID, "CANT_RETRIEVE_FILE_INFO", false);
 							}
 						}
 						
 				        // show errors what may have been appear
 				        Popups.showRuntimeErrorsLog();
+				        
+				        output = ProcessHandler.destroy(output);
 
 						myTasks.remove(0);
 					}
 				}
 
 				CURRENT = null;
-				// System.out.println("FilesAnalyzer Done!");
 			}
 		};
 
@@ -113,7 +113,7 @@ public class FilesAnalyzer {
 				int lengthS = possibleErrorLocation.length();
 				int lengthE = line.length();
 				
-				String errrOutputLine = "FilesAnalyzer Error! FFMPEG can't retrieve information about file:\n" + path + ".\nReason: " + line.substring(lengthS, lengthE).trim() + "\n";
+				String errrOutputLine = Text.FILESANALYZER_ERROR_EXTRTACT_AND_LOG.replace("$FILE_PATH$", path).replace("$REASON$", line.substring(lengthS, lengthE).trim());
 				
 				Logger.tempLog.append(errrOutputLine);
 				return true;
@@ -122,49 +122,42 @@ public class FilesAnalyzer {
 		return false;
 	}
 
-	private String extractData(String output) {
+	private String extractData(String output, String sourceFilePath) {
 		String[] lines = output.split("\n");
 		int size = lines.length;
 
 		boolean lookingForDurationLine = true;
 		boolean lookingForVideoLine = true;
-		boolean lookingForAudioLine = false;
-
+		boolean lookingForAudioLine = true;
+		
+		// WebP staff
+		boolean isImageWEBP = false;
+		boolean containFlagANIM = false;
+		boolean containFlagANMF = false;
+		String webpVideoLine = null;
+		
+		
 		// return data
 		String duration = "UNKN";
 		String tempBitrate = null;
 
-		String bitrate = "UNKN";
-		String vcodec = "UNKN";
-		String icodec = "UNKN";
+		String bitrate    = "UNKN";
+		String vcodec     = "UNKN";
+		String icodec     = "UNKN";
 		String dimentions = "UNKN";
-		String frames = "UNKN";
+		String frames     = "UNKN";
 		
 		boolean isImage         = false;
 		boolean isAnimatedImage = false;
 		
 		boolean containAudio = false;
 
-		for (int li = 0; li < size && (lookingForVideoLine || lookingForDurationLine || lookingForAudioLine); li++) {
+		for (int li = 0; li < size && (lookingForVideoLine || lookingForDurationLine || lookingForAudioLine) && !isImageWEBP; li++) {
 			String line = lines[li];
-			if (line.contains("Audio:")) {
-				lookingForAudioLine = false;
-				containAudio = true;
-			}
-			else if (line.contains("Duration:")) {
-				lookingForDurationLine = false;
-				try {
-					String[] parts = line.split(",");
-					duration = parts[0].trim().split(" ")[1].trim();
-					if(parts.length > 2 && parts[2] != null) {
-						tempBitrate = parts[2].trim().split(":")[1].trim();
-					}
-				} catch (Exception e) {
-					System.err.println("FilesAnalyzer.extractData() ERROR! Processing Line: " + line + "\n\n");
-					e.printStackTrace();
-				}
-			} else if (line.contains(" Video:")) {
+
+			if (lookingForVideoLine && line.contains(" Video:")) { // space needed to exclude error for webp
 				lookingForVideoLine = false;
+				
 				try {
 					List<String> allMatches = new ArrayList<String>();
 					Matcher m = Pattern.compile("\\([^)(]+\\)").matcher(line);
@@ -183,18 +176,19 @@ public class FilesAnalyzer {
 					vcodec = partsCodec[0].trim().split(" ")[0];
 					
 					switch (vcodec) {
-						case "webp"  : 
 						case "png"   :
-						case "mjpeg" : isImage = true; break;
+						case "mjpeg" : isImage = true;         break;
+						
+						case "webp"  : isImageWEBP = true;     break;
 						
 						case "gif"   :
-						case "apng"  : isAnimatedImage = true; isImage = true; break;
+						case "apng"  : isAnimatedImage = true; break;
 						
 						default      : break;
 					}
 					
-					if(isImage) {
-						lookingForAudioLine = true;
+					if(isImage || isAnimatedImage || isImageWEBP) {
+						lookingForAudioLine = false;
 					}
 					
 					if (partsCodec.length > 1) {
@@ -220,6 +214,53 @@ public class FilesAnalyzer {
 					e.printStackTrace();
 				}
 			}
+			else if (lookingForAudioLine && line.contains("Audio:")) {
+				lookingForAudioLine = false;
+				containAudio = true;
+			}
+			else if (lookingForDurationLine && line.contains("Duration:")) {
+				lookingForDurationLine = false;
+				
+				try {
+					String[] parts = line.split(",");
+					duration = parts[0].trim().split(" ")[1].trim();
+					if(parts.length > 2 && parts[2] != null) {
+						tempBitrate = parts[2].trim().split(":")[1].trim();
+					}
+				} catch (Exception e) {
+					System.err.println("FilesAnalyzer.extractData() ERROR! Processing Line: " + line + "\n\n");
+					e.printStackTrace();
+				}
+			}
+			
+			// special for webp
+			else if (line.contains("webp") && line.contains("chunk")) {
+				
+				// [webp @ 0x55ecba2827c0] skipping unsupported chunk: ANIM
+				// [webp @ 0x55ecba2827c0] skipping unsupported chunk: ANMF
+				
+				if(line.contains("ANIM")) {
+					containFlagANIM = true;
+				}
+				else if(line.contains("ANMF")) {
+					containFlagANMF = true;
+				}
+				
+			}
+		}
+		
+		if(isImageWEBP) {
+			
+			// can be animated
+			if(containFlagANIM || containFlagANMF) {
+				
+				// get file info from external lib
+				
+				// return this info
+				return WebpAnalyzer.getAnimWebpInfoSimple(sourceFilePath);
+			}
+			// otherwise
+			return (vcodec + " / " + dimentions);
 		}
 		
 		if(isImage && !containAudio) {
@@ -236,9 +277,6 @@ public class FilesAnalyzer {
 		}
 
 		String out = (duration + " / " + dimentions + " / " + frames + " / " + bitrate + " / " + vcodec + " / " + icodec);
-
-//		System.out.println(out);
-//		System.exit(0);
 
 		return out;
 	}

@@ -94,7 +94,7 @@ public class AdvDnDPane extends JScrollPane implements DropTargetListener {
 					
 					for (Object data : dropDataList) {
 						if (data instanceof File) {
-							if(addToProcessList(((File) data), ".jpg", ".jpeg", ".png", ".gif", ".webp", ".mp4", ".mkv", ".flv", ".avi", ".wmv", ".fid")) {
+							if(addToProcessList(((File) data))) {
 								this.updTableModel.setListChanged(true);
 							}
 						}
@@ -116,7 +116,7 @@ public class AdvDnDPane extends JScrollPane implements DropTargetListener {
 		}
 	}
 	
-	private boolean addToProcessList(File insertingFile, String... validExtensions) {
+	private boolean addToProcessList(File insertingFile) {
 		List<File> processList = updTableModel.getProcessingFileList();
 		int size = processList.size();
 		for (int i = 0; i < size; i++) {
@@ -126,9 +126,9 @@ public class AdvDnDPane extends JScrollPane implements DropTargetListener {
 			}
 		}
 		
-		size = validExtensions.length;
+		size = Configuration.VALID_EXTENSIONS_APP.length;
 		for (int i = 0; i < size; i++) {
-			String checkExtension = validExtensions[i];
+			String checkExtension = Configuration.VALID_EXTENSIONS_APP[i];
 			if(insertingFile.getName().toLowerCase().endsWith(checkExtension)) {
 				processList.add(insertingFile);
 				return true;

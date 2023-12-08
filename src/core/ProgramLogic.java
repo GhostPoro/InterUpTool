@@ -16,87 +16,50 @@ import holders.Configuration.OS;
 import holders.CurrentSessionFilesProcessingSettings;
 import holders.RowData;
 import holders.TFVAR;
+import holders.Text;
 import tools.ImageProcessor;
 import tools.Logger;
+import tools.ProcessHandler;
 import tools.Utils;
 
 public class ProgramLogic {
 	
 	public static String[] simpleShellExec(String cmd) {
-		System.err.println("EXEC: " + cmd);
-		try {
-			Process process = null;
-			if(Configuration.os == OS.WIN) {
-				process = Runtime.getRuntime().exec(cmd);
-			}
-			else {
-				String[] commands = { "bash", "-c", cmd };
-				process = Runtime.getRuntime().exec(commands);
-			}
-			final String[] holder = new String[2];
-			storeShellOutput(process.getInputStream(), holder, 0);
-			storeShellOutput(process.getErrorStream(), holder, 1);
-			process.waitFor();
-			
-			// possible finish of exec
-			return holder;
-			
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-			return null;
-		} catch (InterruptedException ite) {
-			ite.printStackTrace();
-			return null;
-		}
-		//return null;
-	}
-	
-	private static boolean storeShellOutput(InputStream stream, final String[] holder, int idx) {
-		if(stream != null) {
-			
-			Thread readerThread = new Thread() {
-			    public void run() {
-					BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-					StringBuilder strBuilder = new StringBuilder();
-					try {
-						String output = reader.readLine();
-						while (output != null) {
-							strBuilder.append(output);
-							output = reader.readLine();
-						}
-						
-						// when done
-						if((holder != null) && (idx > -1) && (idx < holder.length)) {
-							holder[idx] = strBuilder.toString();
-						}
-						
-					} catch (IOException ioe) {
-						ioe.printStackTrace();
-					}
-			    }
-			};
-			readerThread.start();
-			return true;
-		}
-		return false;
+		if(Logger.logLevelAbove(2)) { System.err.println("EXEC: " + cmd); }
+		return ProcessHandler.run(cmd, null, true, true);
 	}
 	
 	public static boolean checkExecOut(String exec, String a, String b) {
 		String[] out = ProgramLogic.simpleShellExec(exec);
 		if((out != null) && (out.length > 1)) {
-			String[] words = Utils.trimSpaces(((out[0] == null) ? "" : out[0]).replace('\n', ' ') + " " + ((out[1] == null) ? "" : out[1]).replace('\n', ' ')).split(" ");
+			String[] words = combineOutsToLine(out).split(" ");
 			int wsize = words.length;
 			if(wsize > 1) {
 				int wsizemo = (wsize - 1);
 				for (int i = 0; i < wsizemo; i++) {
 					if(words[i].equals(a) && words[i + 1].equals(b)) {
+						out = ProcessHandler.destroy(out);
 						return true;
 					}
 				}
 			}
 		}
-		System.err.println("ERROR! Can't read EXEC output!");
+		else {
+			if(Logger.logLevelAbove(1)) { System.err.println("ERROR! Can't read EXEC output!"); }
+		}
+		
+		if(Logger.logLevelAbove(1)) {
+			System.err.println("ERROR for 'checkExecOut' and '" + exec + "' -> No expected parameters in out! Looking for A - '" + a + "' and B - '" + b + "'");
+		}
+		
+		out = ProcessHandler.destroy(out);
 		return false;
+	}
+	
+	public static String combineOutsToLine(String[] outs) {
+		String outAsLine = Utils.trimSpaces(((outs[0] == null) ? "" : outs[0]).replace('\n', ' ') + " " + ((outs[1] == null) ? "" : outs[1]).replace('\n', ' '));
+		//System.err.println("OUT_LINE: " + outAsLine);
+		return outAsLine;
 	}
 	
 	public static boolean checkExistence(String path) {
@@ -112,7 +75,6 @@ public class ProgramLogic {
 		if(tmpFolderVAR != null) {
 			String tmpFolderPath = tmpFolderVAR.getValue();
 			if(tmpFolderPath != null) {
-//				System.out.println("ProgramLogic.getTempFolderPath: " + tmpFolderPath);
 				File folderFile = new File(tmpFolderPath);
 				if(folderFile.exists() && folderFile.isDirectory()) {
 					return folderFile.getAbsolutePath();
@@ -125,7 +87,7 @@ public class ProgramLogic {
 			}
 		}
 		
-		File folderFile = new File("./uitooltemp");
+		File folderFile = new File(Configuration.DEFAULT_PATH_ALL_TEMP_FILES_LOCATION);
 		folderFile.mkdirs();
 		
 		return folderFile.getAbsolutePath();
@@ -140,8 +102,7 @@ public class ProgramLogic {
 				for (int fi = 0; fi < size; fi++) {
 					if(filesInside[fi].isFile()) {
 						BufferedImage image = ImageProcessor.loadFromFile(filesInside[fi].getAbsolutePath());
-						//System.out.println("RW :" + image.getWidth() + " TW: " + targetW + " RH :" + image.getHeight() + " TH: " + targetH);
-						if(image.getWidth() < targetW || image.getHeight() < targetH) {
+						if(image == null || image.getWidth() < targetW || image.getHeight() < targetH) {
 							return true;
 						}
 						else {
@@ -157,7 +118,9 @@ public class ProgramLogic {
 	public static int[] needScalingStage(String location, int targetW, int targetH, int[] holder) {
 		File framesFolder = new File(location);
 		
-		System.out.println("Image Path: " + location + " EXIST: " + framesFolder.exists());
+		if(Logger.logLevelAbove(1)) {
+			System.out.println("Image Path: " + location + " EXIST: " + framesFolder.exists());
+		}
 		
 		String filePath = null;
 		
@@ -183,7 +146,6 @@ public class ProgramLogic {
 		
 		if(filePath != null) {
 			BufferedImage image = ImageProcessor.loadFromFile(filePath);
-			//System.out.println("RW :" + image.getWidth() + " TW: " + targetW + " RH :" + image.getHeight() + " TH: " + targetH);
 			if(image != null) {
 				int sourceW = image.getWidth();
 				int sourceH = image.getHeight();
@@ -310,7 +272,6 @@ public class ProgramLogic {
 				    						partA = true;
 				    					}
 	
-						    			//System.out.println("L: " + lastProcentage + " C: " + currProcentage + " I: " + counter);
 			    					} catch (Exception e) {}
 			    				}
 							}
@@ -402,9 +363,6 @@ public class ProgramLogic {
 		    	int fileIdx = 0;
 		    	int prevFileIdx = 0;
 		    	
-		    	int outListMaxIdx = 0;
-		    	int errListMaxIdx = 0;
-		    	
 		    	int outListCurIdx = 0;
 		    	int errListCurIdx = 0;
 		    	
@@ -428,7 +386,6 @@ public class ProgramLogic {
 		    				if(line.contains(" done")) {
 		    					outListStartIdx = li;
 		    				}
-		    				//System.out.println("O: " + line + " I: " + li);
 						}
 			    	}
 			    	
@@ -444,7 +401,6 @@ public class ProgramLogic {
 		    				if(line.contains(" done")) {
 		    					errListStartIdx = li;
 		    				}
-		    				//System.out.println("E: " + line + " I: " + li);
 						}
 			    	}
 		    		
@@ -486,7 +442,6 @@ public class ProgramLogic {
 			    	
 			    	do {
 			    		int statusIndex = status[0];
-			    		//System.out.println("SI: " + statusIndex);
 			    		if(statusIndex > lastIndex) {
 			    			float fstageCur = statusIndex;
 			    			updateRowStatus(row, fendStage, fcurStage, (1f / fstageMax * fstageCur));
@@ -552,7 +507,6 @@ public class ProgramLogic {
 			    					catch (Exception e) {}
 			    				}
 		    				}
-		    				//System.out.println("O: " + line + " I: " + li);
 						}
 			    	}
 	    			
@@ -574,7 +528,6 @@ public class ProgramLogic {
 			    					catch (Exception e) {}
 			    				}
 		    				}
-		    				//System.err.println("O: " + line + " I: " + li);
 						}
 	    			}
 	    			

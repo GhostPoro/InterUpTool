@@ -80,10 +80,6 @@ public class TextProcessor {
 			}
 		}
 		
-//		for(String var : result) {
-//			System.out.println("V: " + var);
-//		}
-        
         return result;
 	}
 	
@@ -126,7 +122,7 @@ public class TextProcessor {
 									varName = tempVarName;
 								}
 							}
-							else if(lineChars[ci] == ' ') {
+							else if(lineChars[ci] == ' ') { // TODO: FIX: can be problems if space in variable
 								// do nothing if space
 							}
 							else {
@@ -158,7 +154,6 @@ public class TextProcessor {
 						Configuration.VARS_PARAMETERS_MAP.put(varName, configVar);
 						
 						if(varName.startsWith("VIDEO_PROCESSING_STAGE")) {
-							//System.out.println(configVar);
 							Configuration.VARS_TO_VIDEO_PROCESSING.add(configVar);
 						}
 						else if(varName.startsWith("IMAGE_PROCESSING_STAGE")) {
@@ -187,6 +182,14 @@ public class TextProcessor {
 		
 		// backward propagation here
 		TextProcessor.unpackVariablesValues(null, 0);
+		
+//		if(Logger.logLevelAbove(2)) { // will be skipped coz of log level not initialized + already executed
+//			System.out.println("\nLoaded variables:\n"); // Loaded variables
+//			for(TFVAR var : Configuration.VARS_PARAMETERS) {
+//				System.out.println(var.getName() + " -> " + var);
+//			}
+//			System.out.println();
+//		}
 		
 		return true;
 	}
@@ -286,7 +289,6 @@ public class TextProcessor {
 				if(defValue == null) { // no value for restore -> comment
 					for (int li = 0; li < linesSize; li++) {
 						String line = lines[li];
-						//System.out.println(lines[li].trim());
 						if(line.contains(varName) && !line.startsWith("#") && !line.startsWith("//")) {
 							if(line.contains("PROCESSING_STAGE")) {
 								
@@ -298,20 +300,14 @@ public class TextProcessor {
 								if(max > 0) {
 									String code = line.substring(0, max - 1);
 									String comment = line.substring(max);
-									//System.out.println("REPLACE 01 : " + lines[li]);
 									lines[li] = (code.replace("$" + varName + "$", "") + " # " + comment);
-									//System.out.println("REPLACE 02 : " + lines[li]);
 								}
 								else {
-									//System.out.println("REPLACE 03 : " + lines[li]);
 									lines[li] = line.replace("$" + varName + "$", "");
-									//System.out.println("REPLACE 04 : " + lines[li]);
 								}
 							}
 							else {
-								//System.out.println("REPLACE 05 : " + lines[li]);
 								lines[li] = ("# " + line + " # Commented because invalid (and removed from video processing queue)");
-								//System.out.println("REPLACE 06 : " + lines[li]);
 							}
 						}
 					}
@@ -330,14 +326,10 @@ public class TextProcessor {
 								
 								if(max > 0) {
 									String comment = line.substring(max);
-									//System.out.println("REPLACE 07 : " + lines[li]);
 									lines[li] = ("$" + varName + "$ = " + defValue + " " + comment);
-									//System.out.println("REPLACE 08 : " + lines[li]);
 								}
 								else {
-									//System.out.println("REPLACE 09 VAR: " + varName + " : " + lines[li]);
 									lines[li] = ("$" + varName + "$ = " + defValue);
-									//System.out.println("REPLACE 10 VAR: " + varName + " : " + lines[li]);
 								}
 							}
 						}
@@ -351,7 +343,6 @@ public class TextProcessor {
 		if(changed) {
 			StringBuilder outText = new StringBuilder();
 			for (int li = 0; li < linesSize; li++) {
-				//System.out.println(lines[li].trim());
 				outText.append(lines[li].trim() + "\n");
 			}
 			return outText.toString();

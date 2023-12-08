@@ -9,6 +9,7 @@ import java.util.Map;
 
 import core.ProgramLogic;
 import holders.Configuration.OS;
+import tools.Logger;
 import tools.TextProcessor;
 import tools.Utils;
 
@@ -22,6 +23,8 @@ public class ToolOptions {
 	
 	public final String INTERPOLATION_IA_APP_PATH;
 	public final String INTERPOLATION_IA_MODEL_PATH;
+	
+	public final String WEBP_ANIMATION_APP_PATH;
 	
 	// frames format
 	public final String FRAMES_EXTENSION;
@@ -39,55 +42,29 @@ public class ToolOptions {
 	private boolean canGetInfo = false;
 	private boolean canProcess = false;
 	
+	private boolean supportAWEBP = false;
+	
 	// optional settings (can be altered with run/config options)
 	private boolean removeTempFiles = true;
 	private int logLevel = 0;
-
-	public ToolOptions(String ffmpegEncAppPath, String ffmpegInfoAppPath, String scalerAppPath, String scalerModelPath, String fpsMakerAppPath, String fpsMakerModelPath, String framesName, String framesType) {
-		
-		this.FFMPEG_ENCODER_APP_PATH = ffmpegEncAppPath;
-		this.FFMPEG_INFO_APP_PATH    = ffmpegInfoAppPath;
-		this.checkFFMPEG(this.FFMPEG_ENCODER_APP_PATH, this.FFMPEG_INFO_APP_PATH);
-		
-		this.REALESRGAN_AI_APP_PATH   = scalerAppPath;
-		this.REALESRGAN_AI_MODEL_PATH = scalerModelPath;
-		this.canUpscale = ProgramLogic.checkExistence(this.REALESRGAN_AI_APP_PATH);
-		
-		this.INTERPOLATION_IA_APP_PATH   = fpsMakerAppPath;
-		this.INTERPOLATION_IA_MODEL_PATH = fpsMakerModelPath;
-		this.canSmooth = ProgramLogic.checkExistence(this.INTERPOLATION_IA_APP_PATH);
-		
-		// frames format
-		this.FRAMES_EXTENSION = ((framesType == null) ? "jpg" : framesType);
-		this.FRAMES_STORING_FORMAT = (((framesName == null) ? "frame%08d" : framesName) + "." + FRAMES_EXTENSION);
-	}
 	
-	public ToolOptions(TFVAR ffmpegEncAppPathVar, TFVAR ffmpegInfoAppPathVar, TFVAR scalerAppPathVar, TFVAR scalerModelPathVar, TFVAR fpsMakerAppPathVar, TFVAR fpsMakerModelPathVar, TFVAR framesNameVar, TFVAR framesTypeVar) {
+	public ToolOptions(TFVAR ffmpegEncAppPathVar, TFVAR ffmpegInfoAppPathVar, TFVAR scalerAppPathVar, TFVAR scalerModelPathVar, TFVAR fpsMakerAppPathVar, TFVAR fpsMakerModelPathVar, TFVAR webpmuxAppPathVar, TFVAR framesNameVar, TFVAR framesTypeVar, int logLevel) {
 
-		System.out.println("Tool Available Options:");
+		this.increaseLogLevelTo(logLevel);
 		
-		if(ffmpegEncAppPathVar != null) {
-			String ffmpegPath = ffmpegEncAppPathVar.getValue();
-			this.FFMPEG_ENCODER_APP_PATH = ffmpegPath;
-		}
-		else {
-			this.FFMPEG_ENCODER_APP_PATH = null;
-		}
+		if(Logger.logLevelAbove(1)) { System.out.println("Tool Available Options:"); }
 		
-		if(ffmpegInfoAppPathVar != null) {
-			String ffprobePath = ffmpegInfoAppPathVar.getValue();
-			this.FFMPEG_INFO_APP_PATH = ffprobePath;
-		}
-		else {
-			this.FFMPEG_INFO_APP_PATH = null;
-		}
+		this.FFMPEG_ENCODER_APP_PATH = ((ffmpegEncAppPathVar  != null) ? ffmpegEncAppPathVar.getValue()  : null);
+		this.FFMPEG_INFO_APP_PATH    = ((ffmpegInfoAppPathVar != null) ? ffmpegInfoAppPathVar.getValue() : null);
 		
 		this.checkFFMPEG(this.FFMPEG_ENCODER_APP_PATH, this.FFMPEG_INFO_APP_PATH);
 		if(ffmpegEncAppPathVar  != null) { ffmpegEncAppPathVar .setValid(this.canProcess); }
 		if(ffmpegInfoAppPathVar != null) { ffmpegInfoAppPathVar.setValid(this.canGetInfo); }
 		
-		//System.out.println(this.canProcess ? "FFMPEG: Good!" : "FFMPEG: NOT FOUND");
-		System.out.println(this.canGetInfo ? "FFPROBE: Good!" : "FFPROBE: NOT FOUND");
+		if(Logger.logLevelAbove(1)) {
+			//System.out.println(this.canProcess ? "FFMPEG:  Good!" : "FFMPEG:  NOT FOUND" );
+			System.out.println(this.canGetInfo ? "FFPROBE: Good!" : "FFPROBE: NOT FOUND" );
+		}
 		
 		this.REALESRGAN_AI_APP_PATH   = ((scalerAppPathVar   == null) ? null : scalerAppPathVar.getValue());
 		this.REALESRGAN_AI_MODEL_PATH = ((scalerModelPathVar == null) ? null : scalerModelPathVar.getValue());
@@ -96,8 +73,10 @@ public class ToolOptions {
 		if(scalerAppPathVar   != null) { scalerAppPathVar.setValid(this.canUpscale); }
 		if(scalerModelPathVar != null) { scalerModelPathVar.setValid(upscalerModelValid); }
 		
-		System.out.println(this.canUpscale ? "AI Up-scale: Good!" : "AI Up-scale: NOT FOUND");
-		System.out.println(upscalerModelValid ? "AI Up-scale Model: Good!" : "AI Up-scale Model: NOT FOUND");
+		if(Logger.logLevelAbove(1)) {
+			System.out.println(this.canUpscale    ? "AI Up-scale:       Good!" : "AI Up-scale:       NOT FOUND");
+			System.out.println(upscalerModelValid ? "AI Up-scale Model: Good!" : "AI Up-scale Model: NOT FOUND");
+		}
 		
 		this.INTERPOLATION_IA_APP_PATH   = ((fpsMakerAppPathVar   == null) ? null : fpsMakerAppPathVar.getValue());
 		this.INTERPOLATION_IA_MODEL_PATH = ((fpsMakerModelPathVar == null) ? null : fpsMakerModelPathVar.getValue());
@@ -106,8 +85,10 @@ public class ToolOptions {
 		if(fpsMakerAppPathVar   != null) { fpsMakerAppPathVar.setValid(this.canSmooth); }
 		if(fpsMakerModelPathVar != null) { fpsMakerModelPathVar.setValid(smoothModelValid); }
 		
-		System.out.println(this.canSmooth ? "AI Interpolation: Good!" : "AI Interpolation: NOT FOUND");
-		System.out.println(smoothModelValid ? "AI Interpolation Model: Good!" : "AI Interpolation Model: NOT FOUND");
+		if(Logger.logLevelAbove(1)) {
+			System.out.println(this.canSmooth   ? "AI Interpolation:       Good!" : "AI Interpolation:       NOT FOUND");
+			System.out.println(smoothModelValid ? "AI Interpolation Model: Good!" : "AI Interpolation Model: NOT FOUND");
+		}
 		
 		// frames format
 		if(framesTypeVar != null) {
@@ -122,7 +103,7 @@ public class ToolOptions {
 				break;
 
 				// if supplied bad one
-				default    :
+				default     :
 					this.FRAMES_EXTENSION = "jpg";
 					framesTypeVar.setValid(false);
 				break;
@@ -147,6 +128,18 @@ public class ToolOptions {
 			this.FRAMES_STORING_FORMAT = ("frame%08d" + "." + this.FRAMES_EXTENSION);
 		}
 		
+		if(webpmuxAppPathVar != null) {
+			String webpmuxAppPath = webpmuxAppPathVar.getValue();
+			if(checkWEBPmux(webpmuxAppPath)) {
+				this.WEBP_ANIMATION_APP_PATH = webpmuxAppPath;
+			}
+			else {
+				this.WEBP_ANIMATION_APP_PATH = null;
+			}
+		}
+		else {
+			this.WEBP_ANIMATION_APP_PATH = null;
+		}
 	}
 	
 	// try check if its what we need
@@ -157,7 +150,15 @@ public class ToolOptions {
 		if(info != null && new File(info.replace("\"", "")).exists()) {
 			this.canGetInfo = ProgramLogic.checkExecOut(info + " -h", "ffprobe", "version");
 		}
-		return canProcess;
+		return this.canProcess;
+	}
+	
+	// try check if webpmux installed
+	private boolean checkWEBPmux(String webpmuxAppPath) {
+		if(webpmuxAppPath != null && new File(webpmuxAppPath.replace("\"", "")).exists()) {
+			this.supportAWEBP = ProgramLogic.checkExecOut(webpmuxAppPath + " -h", "Usage:", "webpmux");
+		}
+		return this.supportAWEBP;
 	}
 	
 	public boolean canProcess() {
@@ -182,7 +183,9 @@ public class ToolOptions {
 	
 	private ToolOptions setRemoveTempFiles(boolean key) {
 		this.removeTempFiles = key;
-		System.out.println("Remove Temp Files: " + this.removeTempFiles);
+		if(Logger.logLevelAbove(1)) {
+			System.out.println("Remove Temp Files: " + this.removeTempFiles);
+		}
 		return this;
 	}
 
@@ -217,48 +220,9 @@ public class ToolOptions {
 	}
 	
 	public static ToolOptions load(String[] inputARGs) {
-		String coreSettingsFileName = Configuration.CORE_CONFIG_FILE_PATH;
-		File settingsFile = new File(coreSettingsFileName);
 		
-		System.out.println("Program ROOT: " + new File(".").getAbsolutePath());
-		System.out.println("Program Looking for Config in: " + new File(Configuration.CORE_CONFIG_FILE_PATH).getAbsolutePath());
-		
-		// predefined variables here
-		Configuration.VARS_TO_OVERRIDE_IN_CONFIG.add(new TFVAR("TOOL_VERSION",    Text.TOOL_VERSION));
-		Configuration.VARS_TO_OVERRIDE_IN_CONFIG.add(new TFVAR("TOOL_NAME_SHORT", Text.TOOL_NAME_SHORT));
-		Configuration.VARS_TO_OVERRIDE_IN_CONFIG.add(new TFVAR("TOOL_NAME_FULL",  Text.TOOL_NAME_FULL));
-		
-		// HERE ARE DEFAULT PROGRAM VALUES
-		// predefined variables, which can be overridden in script
-		addProgramParameter("TEMP_AUDIO_END_FILE_NAME_EXTRACT", Text.TEMP_AUDIO_END_FILE_NAME_EXTRACT);
-		addProgramParameter("TEMP_FILES_FOLDER", Configuration.DEFAULT_TEMP_FILES_FOLDER_LOCATION);
-		addProgramParameter("THREADS_FOR_IMAGE_PROCESSING", Configuration.DEFAULT_THREADS_NUMBER_FOR_IMAGE_SCALING);
-		addProgramParameter("FRAMES_STORING_FORMAT_OUT","$FRAMES_STORING_FORMAT$");
-		addProgramParameter("REMOVE_TEMP_FILES","true");
-		
-		boolean configValid = false;
-		
-		if(settingsFile.exists()) {
-			// try read here
-			TextProcessor.initVariablesFromConfig(settingsFile, coreSettingsFileName);
-			
-//			for(TFVAR var : Configuration.VARS_PARAMETERS) {
-//				System.out.println(var.getName() + " = " + var.getValue());
-//			}
-//			System.exit(0);
-		}
-		
-		ToolOptions opts = new ToolOptions(
-			Configuration.getVAR("FFMPEG_EXEC_FILE_PATH"),
-			Configuration.getVAR("FFPROBE_EXEC_FILE_PATH"),
-			Configuration.getVAR("UPSCALER_AI_APP_PATH"),
-			Configuration.getVAR("UPSCALER_AI_MODEL_PATH"),
-			Configuration.getVAR("INTERPOLATION_AI_APP_PATH"),
-			Configuration.getVAR("INTERPOLATION_AI_MODEL_PATH"),
-			Configuration.getVAR("FRAMES_STORING_FORMAT"),
-			Configuration.getVAR("FRAMES_EXTENSION")
-		);
-		
+		boolean localSetRemoveTempFiles = true;
+		int localLogLevel = 0;
 		
 		int argSize = ((inputARGs != null) ? inputARGs.length : 0);
 		for (int ai = 0; ai < argSize; ai++) {
@@ -271,15 +235,15 @@ public class ToolOptions {
 					case "-nodel"     :
 					case "-nodelete"  :
 					case "-temp"      :
-					case "-tempfiles" : opts.setRemoveTempFiles(false); break;
+					case "-tempfiles" : localSetRemoveTempFiles = false; break;
 					
 					// show execution progress in console
 					// simple output (aka statistic)
-					case "-v"   : opts.increaseLogLevelTo(1); break;
+					case "-v"   : localLogLevel = 1; break;
 					// show run commands
-					case "-vv"  : opts.increaseLogLevelTo(2); break;
+					case "-vv"  : localLogLevel = 2; break;
 					// show processes outputs
-					case "-vvv" : opts.increaseLogLevelTo(3); break;
+					case "-vvv" : localLogLevel = 3; break;
 					
 					// TODO: create functionality for only commands generation
 		
@@ -288,6 +252,58 @@ public class ToolOptions {
 			}
 			
 		}
+		
+		String coreSettingsFileName = Configuration.CORE_CONFIG_FILE_PATH;
+		File settingsFile = new File(coreSettingsFileName);
+		
+		if(Logger.logLevelAbove(1, localLogLevel)) {
+			System.out.println("Program ROOT: " + new File(".").getAbsolutePath());
+			System.out.println("Program Looking for Config in: " + new File(Configuration.CORE_CONFIG_FILE_PATH).getAbsolutePath());
+		}
+		
+		// predefined variables here
+		Configuration.VARS_TO_OVERRIDE_IN_CONFIG.add(new TFVAR("TOOL_VERSION",    Text.TOOL_VERSION));
+		Configuration.VARS_TO_OVERRIDE_IN_CONFIG.add(new TFVAR("TOOL_NAME_SHORT", Text.TOOL_NAME_SHORT));
+		Configuration.VARS_TO_OVERRIDE_IN_CONFIG.add(new TFVAR("TOOL_NAME_FULL",  Text.TOOL_NAME_FULL));
+		
+		// HERE ARE DEFAULT PROGRAM VALUES
+		// predefined variables, which can be overridden in script
+		addProgramParameter("TEMP_AUDIO_END_FILE_NAME_EXTRACT", Configuration.TEMP_AUDIO_END_FILE_NAME_EXTRACT);
+		addProgramParameter("TEMP_FILES_FOLDER",                Configuration.DEFAULT_TEMP_FILES_FOLDER_LOCATION);
+		addProgramParameter("THREADS_FOR_IMAGE_PROCESSING",     Configuration.DEFAULT_THREADS_NUMBER_FOR_IMAGE_SCALING + "");
+		addProgramParameter("FRAMES_STORING_FORMAT_OUT",        "$FRAMES_STORING_FORMAT$");
+		addProgramParameter("REMOVE_TEMP_FILES",                "true");
+		
+		boolean configValid = false;
+		
+		if(settingsFile.exists()) {
+			// try read here
+			TextProcessor.initVariablesFromConfig(settingsFile, coreSettingsFileName);
+			
+			if(Logger.logLevelAbove(2, localLogLevel)) {
+				System.out.println("\nConfig VARs:");
+				for(TFVAR var : Configuration.VARS_PARAMETERS) {
+					System.out.println(var.getName() + " = " + var.getValue());
+				}
+				System.out.println();
+			}
+		}
+		
+		ToolOptions opts = new ToolOptions(
+			Configuration.getVAR("FFMPEG_EXEC_FILE_PATH"),
+			Configuration.getVAR("FFPROBE_EXEC_FILE_PATH"),
+			Configuration.getVAR("UPSCALER_AI_APP_PATH"),
+			Configuration.getVAR("UPSCALER_AI_MODEL_PATH"),
+			Configuration.getVAR("INTERPOLATION_AI_APP_PATH"),
+			Configuration.getVAR("INTERPOLATION_AI_MODEL_PATH"),
+			Configuration.getVAR("WEBPMUX_EXEC_FILE_PATH"),
+			Configuration.getVAR("FRAMES_STORING_FORMAT"),
+			Configuration.getVAR("FRAMES_EXTENSION"),
+			localLogLevel // set it here, for internal checks
+		);
+		
+		// set options from arguments
+		opts.setRemoveTempFiles(localSetRemoveTempFiles);
 		
 		/* if config file invalid or not exist -> recreate 
 		 * with predefined and retrieved and approved settings

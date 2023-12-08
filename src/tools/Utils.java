@@ -23,18 +23,7 @@ import holders.Configuration.OS;
 import holders.ToolOptions;
 
 public class Utils {
-	
-	public static boolean openFileInSystem() {
-		try {
-			String folderLoc = new File(ToolOptions.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-			System.out.println(folderLoc);
-			ProgramLogic.simpleShellExec("explorer " + folderLoc + "\\iutool_settings.conf");
-			return false;
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
+
 	public static boolean openFileInSystem(String path) {
 		return openFileInSystem(new File(path));
 	}
@@ -271,6 +260,20 @@ public class Utils {
             ioe.printStackTrace();
         }
         return false;
+    }
+	
+	private static long lastReturnValue;
+	private static long returnValueOffset;
+	
+    public static long getUniquieNanoValue() {
+    	long currentTime = System.nanoTime();
+    	long check = currentTime + returnValueOffset;
+    	while(check == lastReturnValue) {
+    		returnValueOffset++;
+    		check = currentTime + returnValueOffset;
+    	}
+    	lastReturnValue = check;
+    	return lastReturnValue;
     }
     
 	public static boolean deleteDirectory(File dir) {

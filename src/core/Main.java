@@ -22,11 +22,30 @@ public class Main {
 
 	public static void main(String[] args) {
 		
+		/*
+		 * TODO:
+		 * Java up-scaling
+		 * Add to console support of:
+		 * 		command generation -> in console out or to file
+		 * 		setting input-output files:
+		 * 			for logs -log -l
+		 * 			session settings -s -session -settings
+		 * 			global settings  -c -conf -config
+		 * 			console mode -console -consolemode -console_mode
+		 * Dark theme (and theme modification thru *.theme files, aka dark.theme / light.theme etc...)
+		 * Force 'Settings' configurations in-app applying
+		 * GIF/APNG/WEBP Animated Images Up-scaling
+		 * Add proper output logging
+		 * Transfer 'WindowLayout' and 'SessionSettingsGUI' text strings to 'Text' class
+		 * Make support (with list in settings) for localization files to override text strings from Text class (ge.loc, ua.loc etc...)
+		 */
+		
 		/* Load simple core configuration. */
 		Configuration.init();
 		
 		// test room
 		//Configuration.PROCESSING = true;
+		args = new String[] { "-vvv" };
 		//System.exit(0);
 		
 		/* Process basic supplied arguments. */
@@ -52,7 +71,6 @@ public class Main {
 		ToolOptions options = ToolOptions.load(args);
 		if(options != null) {
 			Configuration.OPTIONS = options;
-//			System.exit(0);
 			fileList = new ArrayList<File>();
 			new WindowLayout(new UpdatableTableModel(fileList), args);
 		}

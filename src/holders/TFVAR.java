@@ -52,7 +52,7 @@ public class TFVAR {
 		return valid;
 	}
 	
-	/** Set vairable vaulue validation flag.<br>
+	/** Set variable value validation flag.<br>
 	 * Returns variable Object itself.
 	 * @param isValid = (boolean) flag to set,
 	 * depend of status of kept variable value.

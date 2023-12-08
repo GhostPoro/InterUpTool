@@ -55,13 +55,10 @@ public class FileTool {
 		
 		String finPath = (pathStart + resFolder + separator + fullFileName);
 		
-		
 		finPath = finPath.replace("//", "/");
 		finPath = finPath.replace("././", "./");
 		finPath = finPath.replace("./res/./res", "./res");
 		finPath = finPath.replace("/./", "/");
-		
-		//System.out.println("OUT_PATH: " + finPath + " IN: R: " + resFolder + " F: " + fileName + " E: " + extension); // );// 
 
 		return finPath;
 	}
@@ -103,7 +100,6 @@ public class FileTool {
 			out.close();
 			return true;
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     	return false;
@@ -217,8 +213,6 @@ public class FileTool {
 					File file = listOfFiles[i];
 					String fileFullName = file.getName();
 					boolean hidden = false;
-					
-					//System.out.println("Processing: " + path + File.separatorChar + fileFullName);
 
 					if (file.isFile()) {
 						if(fileFullName.length() > 1) {
@@ -263,7 +257,6 @@ public class FileTool {
 		
 		private boolean storeData(String path, String fname, String fext, boolean hasExt, boolean hidden, List<FileInfo> list, Map<String, List<FileInfo>> batch) {
 			FileInfo finfo = (hasExt ? new FileInfo(path, fname, fext) : new FileInfo(path, fname)).setHidden(hidden);
-			//System.out.println("Adding: " + finfo.getPath());
 			list.add(finfo);
 			List<FileInfo> extList = batch.get(fext);
 			if(extList == null) {

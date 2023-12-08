@@ -5,12 +5,12 @@ import java.util.List;
 import holders.Configuration;
 import holders.CurrentSessionFilesProcessingSettings;
 import holders.RowData;
+import holders.Text;
 import hud.UpdatableTableModel;
 
 public class FilesProcessor {
 	
 	public static boolean process(UpdatableTableModel model, List<RowData> fileList) {
-
 		
 		CurrentSessionFilesProcessingSettings sessionSettingsForFiles = Configuration.SETTINGS;
 		
@@ -22,16 +22,13 @@ public class FilesProcessor {
 		int size = fileList.size();
 		int attempts = 0;
 		
-		//System.out.print("REMOVE: " + sessionSettingsForFiles.removeTempFiles);
-		//System.exit(0);
-		
 //		ProcessHandler.DEBUG = true;
 		
 		for (int i = 0; i < size && attempts < 2 && Configuration.PROCESSING; i++) {
 			RowData fileData = fileList.get(i);
 			if(fileData.isReadyToProcess()) {
 				filesReadyToProcessCounter++;
-				if(FileProcessor.process(startFileStatusUpdater(model, fileData.setInProcess(true).setStatus(0).setTargetStatus(0).setFileProgressStage("Calculating...")), sessionSettingsForFiles)) {
+				if(FileProcessor.process(startFileStatusUpdater(model, fileData.setInProcess(true).setStatus(0).setTargetStatus(0).setFileProgressStage(Text.CALCULATION_ANIMATION_STAGES[2])), sessionSettingsForFiles)) {
 					filesSuccessfullyProcessedCounter++;
 				}
 				fileData.endProcessingTime();
@@ -51,7 +48,7 @@ public class FilesProcessor {
 		return ((filesSuccessfullyProcessedCounter == filesReadyToProcessCounter) && (attempts == 0)) && Configuration.PROCESSING;
 	}
 	
-	private static RowData startFileStatusUpdater(UpdatableTableModel model, RowData currentFile) {
+	private static RowData startFileStatusUpdater(UpdatableTableModel model, RowData currentRow) {
 		Thread fileStatusUpdatingThread = new Thread() {
 			public void run() {
 				
@@ -59,26 +56,27 @@ public class FilesProcessor {
 				
 				boolean statusMax = false;
 				
-				while(Configuration.PROCESSING && currentFile.beingProcessed()) {
+				while(Configuration.PROCESSING && currentRow.beingProcessed()) {
 					try {
-						float curStatus = currentFile.getStatus();
-						float tgtStatus = currentFile.getTargetStatus();
+						float curStatus = currentRow.getStatus();
+						float tgtStatus = currentRow.getTargetStatus();
 						
-						String currentProgressStageLine = currentFile.getFileProcessStage();
+						String currentProgressStageLine = currentRow.getFileProcessStage();
 						
 						if(curStatus != tgtStatus || !oldProgressStageLine.equals(currentProgressStageLine)) {
-							String rowKey = currentFile.getCheckSum();
-							model.updateFileProgressStageColumn(rowKey);
+							//String rowKey = currentFile.getCheckSum();
+							long rowID = currentRow.uniqueID;
+							model.updateFileProgressStageColumn(rowID);
 							oldProgressStageLine = currentProgressStageLine;
 							if(!statusMax && curStatus < tgtStatus) {
 								curStatus += 0.01f;
 								if(curStatus < 0.99f) {
-									currentFile.setStatus(curStatus);
-									model.updateProgressBar(rowKey, curStatus);
+									currentRow.setStatus(curStatus);
+									model.updateProgressBar(rowID, curStatus);
 								}
 								else {
-									currentFile.setStatus(0.99f);
-									model.updateProgressBar(rowKey, 0.99f);
+									currentRow.setStatus(0.99f);
+									model.updateProgressBar(rowID, 0.99f);
 									statusMax = true;
 								}
 							}
@@ -92,17 +90,23 @@ public class FilesProcessor {
 				}
 				
 				
-				currentFile.setStatus(1f);
-				currentFile.setTargetStatus(1f);
-				currentFile.setFileProgressStage("T: " + currentFile.getProcessingTime());
-				String rowKey = currentFile.getCheckSum();
-				model.updateProgressBar(rowKey, 1f);
-				model.updateFileProgressStageColumn(rowKey);
+				String processFinishTime = new String("T: " + currentRow.getProcessingTime());
+				float processFinishStatus = 1f;
+				
+				long rowID = currentRow.uniqueID;
+				
+				currentRow.setStatus(processFinishStatus);
+				currentRow.setTargetStatus(processFinishStatus);
+				currentRow.setFileProgressStage(processFinishTime);
+				
+				model.updateProgressBar(rowID, processFinishStatus);
+				model.setFileProgressStage(rowID, processFinishTime);
+				
 				if(Logger.logLevelAbove(1)) { System.err.println("FilesProcessor: set current file status to 100%"); }
 			}
 		};
 		fileStatusUpdatingThread.start();
-		return currentFile;
+		return currentRow;
 	}
 
 }

@@ -73,6 +73,7 @@ public class WindowLayout {
 				// The idea is to validate user entry. (User should enter only
 				// values ranging from 0 through 40 (inclusive).
 
+				/*
 				TableModelListener tml;
 				tml = new TableModelListener() {
 
@@ -113,7 +114,7 @@ public class WindowLayout {
 				};
 
 				// Register the table model listener with the table's data model.
-				updTableModel.addTableModelListener(tml);
+				updTableModel.addTableModelListener(tml); // */
 
 				JFrame frame = new JFrame();
 				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -127,7 +128,7 @@ public class WindowLayout {
 
 				frame.add(new AdvDnDPane(Configuration.windowInitHeight, Configuration.windowInitWidth, table, updTableModel));
 
-				// delleteing by pressing 'DEL' key
+				// deleting by pressing 'DEL' key
 				Action deleteRows = new AbstractAction() {
 					private static final long serialVersionUID = 3847170562969694589L;
 					public void actionPerformed(ActionEvent e) {
@@ -137,10 +138,15 @@ public class WindowLayout {
 							updTableModel.removeFile(selectedRowsArray[i]);
 						}
 						table.clearSelection();
+						
+						// reset progress bar column
+						if(updTableModel.getRowCount() == 0) {
+							table.getColumn("Progress").setCellRenderer(new AdvProgressCellRenderer());
+						}
 					}
 				};
-				table.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteRowsActionName");
-				table.getActionMap().put("deleteRowsActionName", deleteRows);
+				table.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteRowsCustomWindowAction");
+				table.getActionMap().put("deleteRowsCustomWindowAction", deleteRows);
 
 				// Display the window.
 				frame.pack();
@@ -150,7 +156,7 @@ public class WindowLayout {
 		});
 	}
 
-	// Create an Edit menu to support cut/copy/paste.
+	// Create an File drop-dawn menu
 	public JMenuBar createMenuBar(JFrame frame, JTable table) {
 		JMenuItem menuItem = null;
 		
@@ -165,7 +171,6 @@ public class WindowLayout {
 			}
 		});
 		
-		
 		menuItem = new JMenuItem("Show Last Errors");
 		mainMenu.add(menuItem);
 		menuItem.addActionListener(new ActionListener() {
@@ -176,9 +181,6 @@ public class WindowLayout {
 				Popups.showRuntimeErrorsLog();
 			}
 		});
-		
-
-		
 		
 		JButton btn_SessionSettings = new JButton("Settings");
 		btn_SessionSettings.addActionListener(new ActionListener() {
@@ -197,16 +199,8 @@ public class WindowLayout {
 					System.out.println("Cancelling files processing...");
 					btn_StartProcess.setText("Process >>");;
 					Configuration.PROCESSING = false;
-					//List<RowData> rows = updTableModel.getRowsData();
-					// reset state
-//					for (RowData rowData : rows) {
-//						float curSatus = 0;
-//						rowData.setStatus(curSatus);
-//						updTableModel.updateProgressBar(rowData.getCheckSum(), curSatus);
-//					}
 					table.setEnabled(true);
 					btn_SessionSettings.setEnabled(true);
-					//System.out.println("Done A!");
 				}
 				else {
 					
@@ -220,22 +214,22 @@ public class WindowLayout {
 								table.setEnabled(false);
 								btn_SessionSettings.setEnabled(false);
 								table.clearSelection();
-								btn_StartProcess.setText("Cancel");
+								btn_StartProcess.setText("Cancel"); // Transforming process button with text: Cancel
 								Configuration.PROCESSING = true;
 								
-								System.out.println("Files enchancing process Started!");
+								if(Logger.logLevelAbove(1))     { System.out.println("Files enchancing process Started!"); }
 						
 								if(FilesProcessor.process(updTableModel, rows)) {
-									System.out.println("Files enchancing process successfully Finished!"); //  
+									if(Logger.logLevelAbove(1)) { System.out.println("Files enchancing process successfully Finished!"); }
 								}
 								else {
-									System.err.println("Files enchancing process finished with errors or was interrupted!");
+									if(Logger.logLevelAbove(1)) { System.err.println("Files enchancing process finished with errors or was interrupted!"); }
 								}
 								
 								btn_StartProcess.setText("Process >>");;
 								Configuration.PROCESSING = false;
-								table.setEnabled(true);
 								btn_SessionSettings.setEnabled(true);
+								table.setEnabled(true);
 							}
 						};
 						filesProcessingThread.start();

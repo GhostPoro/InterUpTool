@@ -27,12 +27,14 @@ public class Logger {
 	
 	public static boolean logLevelAbove(int level) {
 		ToolOptions opts = Configuration.OPTIONS;
-		if(opts != null) {
-			if(opts.getLogLevel() >= level) {
-				return true;
-			}
+		if(opts != null && opts.getLogLevel() >= level) {
+			return true;
 		}
 		return false;
+	}
+	
+	public static boolean logLevelAbove(int level, int preLevel) {
+		return (preLevel >= level);
 	}
 
 }

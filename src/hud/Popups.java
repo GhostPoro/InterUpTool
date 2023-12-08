@@ -30,16 +30,13 @@ public class Popups {
 	private static JScrollPane CURRENT_runtimeErrorLogsPopup_ScrollPane = null;
 	
 	public static ToolOptions configWarning(ToolOptions opts, final String[] args) {
-		Object[] options = { "Reload Config", "Open Config File", "Try to fix config file", "Close Application" };
-		String windowName = "Configuration Error";
-		String windowQuestion = null;
+		Object[] options = { Text.STARTING_POPUP_TEXTS[1], Text.STARTING_POPUP_TEXTS[2], Text.STARTING_POPUP_TEXTS[3], Text.STARTING_POPUP_TEXTS[4] };
 		int userConfigAnswer = -1;
 		
 		boolean requestAgain = true;
 		
 		do {
-			windowQuestion = "Application cannot access FFMPEG executable by provided path in config file\n'" + opts.FFMPEG_ENCODER_APP_PATH + "'.\nThere several options:";
-			userConfigAnswer = JOptionPane.showOptionDialog(null, windowQuestion, windowName, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[1]);
+			userConfigAnswer = JOptionPane.showOptionDialog(null, Text.STARTING_POPUP_TEXTS[5].replace("$FFMPEG_ENCODER_APP_PATH$", opts.FFMPEG_ENCODER_APP_PATH), Text.STARTING_POPUP_TEXTS[0], JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[1]);
 			
 			if(userConfigAnswer == 0) { // Read config again
 				opts = ToolOptions.load(args);
@@ -91,7 +88,7 @@ public class Popups {
 						Logger.previusTempLog = CURRENT_runtimeErrorLogsPopup_TextArea.getText();
 						
 						// dispose popup's elements
-						CURRENT_runtimeErrorLogsPopup_TextArea = null;
+						CURRENT_runtimeErrorLogsPopup_TextArea   = null;
 						CURRENT_runtimeErrorLogsPopup_ScrollPane = null;
 						
 						System.out.println("Dialog disposed");
@@ -101,7 +98,7 @@ public class Popups {
 		                super.dispose();
 		            }
 		        };
-		        dialog.setTitle("Errors");
+		        dialog.setTitle(Text.ERRORS_POPUP_TEXTS[0]);
 		        //dialog.setModal(true); // will block main GUI
 		        dialog.setResizable(true);
 		        dialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -114,7 +111,7 @@ public class Popups {
 			    JScrollPane scrollPane = new JScrollPane(textArea);
 			    CURRENT_runtimeErrorLogsPopup_ScrollPane = scrollPane;
 			    
-			    // Set the scroll pane's policy to display scrollbars as needed
+			    // Set the scroll pane's policy to display scroll bars as needed
 			    //scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 			    //scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 

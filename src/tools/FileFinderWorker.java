@@ -30,21 +30,23 @@ public class FileFinderWorker extends SwingWorker<List<File>, File> {
         // sort before adding to list
         Collections.sort(processList);
         
-        for (File file : processList) {
-        	//System.out.println("FFW PUBLISH FILE: " + file.getName());
-            publish(file);
-        }
+        int size = processList.size();
+        for (int i = 0; i < size; i++) {
+        	publish(processList.get(i));
+		}
+        
         return processList;
     }
     
     /* DnD File Adding Stage 2 */
     @Override
     protected void process(List<File> filesList) {
+    	
     	// adding files as rows in 'UpdatableTableModel' Class
-        for (File file : filesList) {
-        	//System.out.println("FFW ADDING FILE: " + file.getName());
-            model.addFile(file);
-        }
+        int size = filesList.size();
+        for (int i = 0; i < size; i++) {
+        	model.addFile(filesList.get(i));
+		}
         
         // show errors what may have been appear
         Popups.showRuntimeErrorsLog();

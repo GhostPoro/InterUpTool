@@ -9,12 +9,15 @@ import java.util.Date;
 
 import javax.imageio.ImageIO;
 
+import tools.Utils;
+
 public class RowData {
+	
+	public final long uniqueID;
 
 	private final File file;
-	private final String type;
-	private final long length;
-	private final String checksum;
+	private final String fullFilePath;
+
 	private final int rowIndex;
 	
 	private float status;
@@ -42,40 +45,62 @@ public class RowData {
 	private String format = null;
 	private float fps    = -1;
 	private int duration = -1;
-	private int width  = -1;
-	private int height = -1;
+	private int width    = -1;
+	private int height   = -1;
 
-	public RowData(File inFile, String hash, String type, int indexInList) {
+	public RowData(File inFile, int indexInList, String inFullFilePath) {
+		this.uniqueID = Utils.getUniquieNanoValue();
+		this.fullFilePath = inFullFilePath;
 		this.file = inFile;
-		this.type = type;
-		this.length = 0;//this.file.length();
-		this.status = 0f;
-		this.checksum = hash;
 		this.rowIndex = indexInList;
+		this.status = 0f;
 	}
-
+	
+//  #### Deprecated ####
+//	private final String type;
+//	private final long length;
+//	private final String checksum;
+//	public RowData(File inFile, String hash, String type, int indexInList) {
+//	this.checksum = hash;
+//	this.type = type;
+//	this.length = 0;//this.file.length();
+//	public long getLength() {
+//		return length;
+//	}
+//	public String getType() {
+//		return type;
+//	}
+//	public String getCheckSum() {
+//		return checksum;
+//	}
+	
 	public File getFile() {
 		return file;
 	}
-
-	public long getLength() {
-		return length;
+	
+	public String getFullFilePath() {
+		if(this.fullFilePath == null) {
+			if(this.file != null) {
+				return this.file.getAbsolutePath();
+			}
+		}
+		return this.fullFilePath;
 	}
-
-	public float getStatus() {
-		return status;
+	
+	public String getFilePath() {
+		return getFullFilePath();
 	}
-
-	public String getType() {
-		return type;
+	
+	public String getPath() {
+		return getFullFilePath();
 	}
-
-	public String getCheckSum() {
-		return checksum;
-	}
-
+	
 	public int getRowIndex() {
 		return rowIndex;
+	}
+	
+	public float getStatus() {
+		return status;
 	}
 
 	public RowData setStatus(float status) {
@@ -121,7 +146,7 @@ public class RowData {
 		this.realFileProperty = props;
 		this.changed = true;
 		
-		if(props.contains("CANT_RETRIVE_FILE_INFO") || props.contains("INVALID_FILE_DATA")) {
+		if(props.contains("CANT_RETRIEVE_FILE_INFO") || props.contains("INVALID_FILE_DATA") || props.contains("NOT_SUPPORTED")) {
 			this.propertiesSet = true;
 		}
 		else if(valid && props.contains("/")) {
@@ -144,7 +169,7 @@ public class RowData {
 					}
 				}
 				
-				if(data.length > 2 && data[2] != null && !data[2].trim().equals("UNKN")) {
+				if(data.length > 2 && data[2] != null && !data[2].trim().equals("UNKN") && !data[2].contains("frames")) {
 					try {
 						this.fps = Float.valueOf(data[2].replace("fps", "").trim());
 					}
@@ -284,9 +309,9 @@ public class RowData {
 		}
 		
 		switch (propsShowStage) {
-			case  1 : return "Calculating.";
-			case  2 : return "Calculating..";
-			case  3 : return "Calculating...";
+			case  1 : return Text.CALCULATION_ANIMATION_STAGES[0];
+			case  2 : return Text.CALCULATION_ANIMATION_STAGES[1];
+			case  3 : return Text.CALCULATION_ANIMATION_STAGES[2];
 			default : break;
 		}
 		

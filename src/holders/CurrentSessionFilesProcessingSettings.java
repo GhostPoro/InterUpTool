@@ -93,8 +93,8 @@ public class CurrentSessionFilesProcessingSettings {
 		this.userWantRestoreFrameRate   = TextProcessor.parseBoolean(getValue(settingsFromFile, "restore_oroginal_fps", "false"));
 		this.userWantSaveToOutputFolder = false;
 		
-		this.upscaleWithJava = TextProcessor.parseBoolean(getValue(settingsFromFile, "upscale_by_java", "false"));
-		this.scaleWithFFMPEG = TextProcessor.parseBoolean(getValue(settingsFromFile, "scale_by_ffmpeg", "false"));
+		this.upscaleWithJava       = TextProcessor.parseBoolean(getValue(settingsFromFile, "upscale_by_java", "false"));
+		this.scaleWithFFMPEG       = TextProcessor.parseBoolean(getValue(settingsFromFile, "scale_by_ffmpeg", "false"));
 		
 		this.customFFMPEGFilterCMD = getValue(settingsFromFile, "ffmpeg_custom_filters_cmd", "");
 		

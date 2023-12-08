@@ -3,6 +3,7 @@ package hud;
 import java.util.List;
 
 import holders.RowData;
+import tools.Logger;
 
 public class SimpleAnimator {
 	
@@ -23,7 +24,7 @@ public class SimpleAnimator {
 							RowData row = rows.get(i);
 							if(!row.isPropertiesSet()) {
 								needAnimate = true;
-								model.setFileProperties(row.getCheckSum(), row.getFileProperties(), false);
+								model.setFileProperties(row.uniqueID, row.getFileProperties(), false);
 							}
 						}
 						try { Thread.sleep(1000); } catch (InterruptedException ie) { ie.printStackTrace(); }
@@ -34,7 +35,7 @@ public class SimpleAnimator {
 						}
 					} while(needAnimate);
 					running = false;
-					System.out.println("SimpleAnimator Finished!");
+					if(Logger.logLevelAbove(1)) { System.out.println("SimpleAnimator Finished!"); }
 				}
 			};
 			animator.start();

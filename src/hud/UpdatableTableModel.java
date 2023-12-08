@@ -3,6 +3,7 @@ package hud;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,12 +21,12 @@ import tools.Logger;
 public class UpdatableTableModel extends AbstractTableModel {
 	private static final long serialVersionUID = 467996132848313011L;
 	private final List<RowData> rows;
-	private final Map<String, RowData> mapLookup;
+	//private final Map<String, RowData> mapLookup;
 	private final List<File> fileList;
 	private boolean listChanged;
 
 	public UpdatableTableModel(List<File> inFileList) {
-		this.mapLookup = new HashMap<String, RowData>(25);
+		//this.mapLookup = new HashMap<String, RowData>(25);
 		this.rows = new ArrayList<RowData>(25);
 		this.fileList = inFileList;
 		this.listChanged = false;
@@ -42,61 +43,41 @@ public class UpdatableTableModel extends AbstractTableModel {
 	}
 
 	@Override
-	public String getColumnName(int column) {
-		String name = "??";
-		switch (column) {
-		case 0:
-			name = "File Name";
-			break;
-		case 1:
-			name = "File Path";
-			break;
-		case 2:
-			name = "File Properties";
-			break;
-		case 3:
-			name = "Current / End / Stage";
-			break;
-		case 4:
-			name = "Progress";
-			break;
+	public String getColumnName(int columnNum) {
+		switch (columnNum) {
+			case 0 : return "File Name";
+			case 1 : return "File Path";
+			case 2 : return "File Properties";
+			case 3 : return "Current / End / Stage";
+			case 4 : return "Progress";
 		}
-		return name;
+		return "UNKNOWN_COLUMN_NAME";
 	}
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		RowData rowData = rows.get(rowIndex);
-		Object value = null;
 		switch (columnIndex) {
-		case 0:
-			value = rowData.getFile().getName();
-			break;
-		case 1:
-			value = rowData.getFile().getAbsolutePath();
-			break;
-		case 2:
-			value = rowData.getFileProperties(); // "mp4/jpg";
-			break;
-		case 3:
-			value = rowData.getFileProcessStage(); //"0/1982/5";
-			break;
-		case 4:
-			value = rowData.getStatus();
-			break;
+			case 0 : return rowData.getFile().getName();
+			case 1 : return rowData.getFile().getAbsolutePath();
+			case 2 : return rowData.getFileProperties();
+			case 3 : return rowData.getFileProcessStage();
+			case 4 : return rowData.getStatus();
 		}
-		return value;
+		return null;
 	}
 
 	public void addFile(File file) {
+		int currentRowsSize = getRowCount();
 		if(file.length() > 0) {
-			String hash = file.getAbsolutePath(); //Hash.SHA256.checksum(file);
-			RowData rowData = mapLookup.get(hash);
-			if(rowData == null) {
-				rowData = new RowData(file, hash, "FILE_TYPE_HERE", rows.size());
-				mapLookup.put(hash, rowData);
-				rows.add(rowData);
-				fireTableRowsInserted(rows.size() - 1, rows.size() - 1);
+			String fileFullPath = file.getAbsolutePath();
+			if(fileNotInList(fileFullPath)) {
+				rows.add(new RowData(file, currentRowsSize, fileFullPath));
+				
+				int rowsSize = getRowCount();
+				int rowsSizeMinusOne = (rowsSize - 1);
+				
+				fireTableRowsInserted(rowsSizeMinusOne, rowsSizeMinusOne);
 				
 				// add file to the queue, for media info extraction
 				FilesAnalyzer.addTask(this, file);
@@ -118,43 +99,47 @@ public class UpdatableTableModel extends AbstractTableModel {
 	}
 	
 	public void removeFile(int fileIndex) {
-		mapLookup.remove(rows.get(fileIndex).getCheckSum());
 		rows.remove(fileIndex);
 		
 		fileList.clear();
-		for(RowData rowData : rows) {
-			fileList.add(rowData.getFile());
+		
+		int rowsSize = getRowCount();
+		int rowsSizeMinusOne = (rowsSize - 1);
+		
+		for (int ri = 0; ri < rowsSize; ri++) {
+			fileList.add(rows.get(ri).getFile());
 		}
 		
-		fireTableRowsInserted(rows.size() - 1, rows.size() - 1);
+		// this one expects first row and last, why its only last one dono 
+		fireTableRowsInserted(rowsSizeMinusOne, rowsSizeMinusOne);
 	}
 
 	/* Progress  here is float from 0.00f to 1.00f as 0-100% */
-	public void updateProgressBar(String rowKey, float progress) {
-		RowData rowData = mapLookup.get(rowKey);
+	public void updateProgressBar(long rowID, float progress) {
+		RowData rowData = getRowByID(rowID);
 		if (rowData != null) {
 			int rowIndex = rowData.getRowIndex();
 			fireTableCellUpdated(rowIndex, 4);
 		}
 	}
 	
-	public void updateFileProgressStageColumn(String rowKey) {
-		RowData rowData = mapLookup.get(rowKey);
+	public void updateFileProgressStageColumn(long rowID) {
+		RowData rowData = getRowByID(rowID);
 		if (rowData != null) {
 			fireTableCellUpdated(rowData.getRowIndex(), 3);
 		}
 	}
 	
-	public void setFileProgressStage(String rowKey, String text) {
-		RowData rowData = mapLookup.get(rowKey);
+	public void setFileProgressStage(long rowID, String text) {
+		RowData rowData = getRowByID(rowID);
 		if (rowData != null) {
 			rowData.setFileProgressStage(text);
 			fireTableCellUpdated(rowData.getRowIndex(), 3);
 		}
 	}
 	
-	public void setFileProperties(String rowKey, String text, boolean valid) {
-		RowData rowData = mapLookup.get(rowKey);
+	public void setFileProperties(long rowID, String text, boolean valid) {
+		RowData rowData = getRowByID(rowID);
 		if (rowData != null) {
 			rowData.setFileProperties(text, valid);
 			fireTableCellUpdated(rowData.getRowIndex(), 2);
@@ -178,5 +163,33 @@ public class UpdatableTableModel extends AbstractTableModel {
 		return this;
 	}
 	
+	private RowData getRowByID(long rowID) {
+		List<RowData> localRows = getRowsData();
+		int rowsSize = localRows.size();
+		for (int ri = 0; ri < rowsSize; ri++) {
+			RowData localRow = localRows.get(ri);
+			if(rowID == localRow.uniqueID) {
+				return localRow;
+			}
+		}
+		return null;
+	}
+	
+	public RowData getRowByPath(String path) {
+		List<RowData> localRows = getRowsData();
+		int rowsSize = localRows.size();
+		for (int ri = 0; ri < rowsSize; ri++) {
+			RowData localRow = localRows.get(ri);
+			if(localRow.getFullFilePath().equals(path)) {
+				return localRow;
+			}
+		}
+		return null;
+	}
+	
+	private boolean fileNotInList(String path) {
+		RowData localRow = getRowByPath(path);
+		return (localRow == null);
+	}
 	
 }

@@ -21,6 +21,8 @@ import tools.FileTool.FilesBatch;
 
 public class ImageProcessor {
 	
+	private static final int NO_COLOR = toColor(0, 0, 0, 0); // will be black if no alpha
+	
 	private static final int THREAD_DONE_IMAGE_PROCESSING = -99; 
 	
 	private static final boolean DEBUG = false;
@@ -30,7 +32,7 @@ public class ImageProcessor {
 		
 		final boolean processingInSingleFileMode = (sourceResource.exists() && sourceResource.isFile());
 		
-		String[] allowedImageExtensions = Configuration.validImageExtensions;
+		String[] allowedImageExtensions = Configuration.VALID_EXTENSIONS_IMAGE;
 		
 		// for file processing variables
 		String outFileName = null;
@@ -38,7 +40,6 @@ public class ImageProcessor {
 		String outFileLocation = null;
 		
 		String[] sourceFileNameParts = generateFullFileName(sourcePath, true);
-
 		
 		// files list for folder processing
 		final List<String> pathesToProcess = new ArrayList<String>();
@@ -187,7 +188,6 @@ public class ImageProcessor {
 		final int finScaledTargetWidthInt  = scaledTargetWidthInt;
 		final int finScaledTargetHeightInt = scaledTargetHeightInt;
 		
-		int blackColor = toColor(0, 0, 0, 0);
 		
 		final int[] threadsStatus     = new int[threadsNum];
 		final int[] prevThreadsStatus = new int[threadsNum];
@@ -217,7 +217,7 @@ public class ImageProcessor {
 							sx++;
 						}
 						else {
-							outarr[x][y] = blackColor;
+							outarr[x][y] = NO_COLOR;
 						}
 					}
 				}
@@ -258,7 +258,7 @@ public class ImageProcessor {
 												sx++;
 											}
 											else {
-												outarr[x][y] = blackColor;
+												outarr[x][y] = NO_COLOR;
 											}
 										}
 									}
@@ -300,7 +300,7 @@ public class ImageProcessor {
 							sy++;
 						}
 						else {
-							outarr[x][y] = blackColor;
+							outarr[x][y] = NO_COLOR;
 						}
 					}
 				}
@@ -339,7 +339,7 @@ public class ImageProcessor {
 												sy++;
 											}
 											else {
-												outarr[x][y] = blackColor;
+												outarr[x][y] = NO_COLOR;
 											}
 										}
 									}
@@ -419,10 +419,8 @@ public class ImageProcessor {
 						doneThreads++;
 					}
 				}
-				
-				
+
 				for (int ti = 0; ti < threadsNum; ti++) {
-					
 					if(prevThreadsStatus[ti] != threadsStatus[ti]) {
 						prevThreadsStatus[ti] = threadsStatus[ti];
 						doneThreads = 0;
@@ -438,8 +436,6 @@ public class ImageProcessor {
 			return false;
 		}
 		
-		//System.out.println("ImageProcessor.scaleImagesToSize: Image Mode: " + (processingInSingleFileMode ? "TRUE" : "FALSE"));
-		//System.out.println(scaledTargetWidthInt + "x" + scaledTargetHeightInt);
 		return Configuration.PROCESSING;
 	}
 	
@@ -463,21 +459,6 @@ public class ImageProcessor {
 	    }
 	    return outputImage;
 	}
-//	public static int[][] loadAsArray(BufferedImage image) {
-//		final int width  = image.getWidth();
-//		final int height = image.getHeight();
-//		
-//	    // Create a 2D integer array to store the pixels
-//	    int[][] pixels = new int[height][width];
-//	
-//	    // Copy the pixels from the image into the array
-//	    for (int y = 0; y < height; y++) {
-//	        for (int x = 0; x < width; x++) {
-//	            pixels[y][x] = image.getRGB(x, y);
-//	        }
-//	    }
-//	    return pixels;
-//	}
 	
 	public static int[][] loadAsArray(BufferedImage image) {
 
@@ -506,7 +487,6 @@ public class ImageProcessor {
 			final int pixelLength = 3;
 			for (int pixel = 0, row = 0, col = 0; pixel + 2 < pixels.length; pixel += pixelLength) {
 				int argb = -16777216;								// 255 alpha
-				//argb = 0;
 				argb += ( (int) pixels[pixel]     & 0xff);			// blue
 				argb += (((int) pixels[pixel + 1] & 0xff) << 8);	// green
 				argb += (((int) pixels[pixel + 2] & 0xff) << 16);	// red
