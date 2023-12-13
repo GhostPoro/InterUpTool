@@ -31,7 +31,7 @@ public class Text {
 	};
 	
 	public static final String[] MAIN_WINDOW_INTERFACE = new String [] {
-		"Errors", // Window Title
+		"InterUpTool", // Window Title
 	};
 	
 	public static final String[] ERRORS_POPUP_TEXTS = new String [] {
@@ -76,8 +76,10 @@ public class Text {
 	* my was "PAVINUT", so sad...
 	*/
 	public static final String TOOL_NAME_SHORT = "InterUpTool";
+	
 	/** Human readable full name of tool */
 	public static final String TOOL_NAME_FULL  = "Pictures and Video, Interpolating and Up-scaling Tool";
+	
 	/** Version of tool */
 	public static final String TOOL_VERSION    = "v0.07";
 	

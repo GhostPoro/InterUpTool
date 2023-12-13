@@ -151,7 +151,6 @@ public class Utils {
 		try {
 			return new String(input.getBytes("UTF-8"), "UTF-8");
 		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return input;
