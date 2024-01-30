@@ -35,9 +35,14 @@ public class Popups {
 		
 		boolean requestAgain = true;
 		
+		String ffmpeg_path_replacement = "NOT_INITIALIZED";
+  
 		do {
-			userConfigAnswer = JOptionPane.showOptionDialog(null, Text.STARTING_POPUP_TEXTS[5].replace("$FFMPEG_ENCODER_APP_PATH$", opts.FFMPEG_ENCODER_APP_PATH), Text.STARTING_POPUP_TEXTS[0], JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[1]);
-			
+		   
+		   	ffmpeg_path_replacement = ((opts.FFMPEG_ENCODER_APP_PATH != null) ? opts.FFMPEG_ENCODER_APP_PATH : "NULL");
+		   
+		   	/** direct insertion of 'opts.FFMPEG_ENCODER_APP_PATH' inside 'replace' cause to crash if 'opts.FFMPEG_ENCODER_APP_PATH' == null, if no config file found, so premature initialization is required */
+		   	userConfigAnswer = JOptionPane.showOptionDialog(null, Text.STARTING_POPUP_TEXTS[5].replace("$FFMPEG_ENCODER_APP_PATH$", ffmpeg_path_replacement), Text.STARTING_POPUP_TEXTS[0], JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[1]);
 			if(userConfigAnswer == 0) { // Read config again
 				opts = ToolOptions.load(args);
 			}
