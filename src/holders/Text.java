@@ -40,7 +40,7 @@ public class Text {
 	
 	/** Starting Pop-up Strings storage. Window name, text and button text. */
 	public static final String[] STARTING_POPUP_TEXTS = new String [] {
-		"Configuration Error", // Window name
+		"$TOOL_NAME_SHORT$ ($TOOL_VERSION$) Configuration Error", // Window name
 		
 		// buttons
 		"Reload Config",
@@ -81,7 +81,7 @@ public class Text {
 	public static final String TOOL_NAME_FULL  = "Pictures and Video, Interpolating and Up-scaling Tool";
 	
 	/** Version of tool */
-	public static final String TOOL_VERSION    = "v0.08";
+	public static final String TOOL_VERSION    = "v0.09";
 	
 	/** Full template of User settings file in form of String */
 	public static final String DEFAULT_USER_SETTINGS_FILE_STRING =
