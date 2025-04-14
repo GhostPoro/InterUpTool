@@ -40,7 +40,7 @@ public class Text {
 	
 	/** Starting Pop-up Strings storage. Window name, text and button text. */
 	public static final String[] STARTING_POPUP_TEXTS = new String [] {
-		"Configuration Error", // Window name
+		"$TOOL_NAME_SHORT$ ($TOOL_VERSION$) Configuration Error", // Window name
 		
 		// buttons
 		"Reload Config",
