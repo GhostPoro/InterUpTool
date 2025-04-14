@@ -9,7 +9,7 @@ GUI Tool for control, queue and automate video enhancing process, provided by FF
 ## Run parameters
 
 ```console
-Usage: java -jar ./interuptool_v0.09.jar [options]...
+Usage: java -jar ./interuptool_v0.10.jar [options]...
 
   Help:
     -h                  print this help end exit
@@ -28,4 +28,4 @@ Usage: java -jar ./interuptool_v0.09.jar [options]...
 
 # WIP:
 - Dark Theme
-- Animated images upscaling (gif/apng/webp)
+- Animated images upscaling (apng/webp)
