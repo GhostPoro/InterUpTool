@@ -367,6 +367,16 @@ public class SessionSettingsGUI extends JDialog {
 	
 	private void setAnimationScaligParameters(CurrentSessionFilesProcessingSettings settings, int outopt) {
 		
+		if(settings.upscaleWithJava) {
+			rdb_upscale_by_ai.setSelected(false);
+			rdb_upscale_by_java.setSelected(true);
+		}
+		else {
+			rdb_upscale_by_ai.setSelected(true);
+			rdb_upscale_by_java.setSelected(false);
+		}
+		
+		
 		int mopt = ((settings == null) ? 0 : settings.animationScalingOption);
 		int sopt = ((settings == null) ? 2 : settings.animationPresetOption);
 		String w = ((settings == null) ? "2560" : ("" + settings.animationTargetW));

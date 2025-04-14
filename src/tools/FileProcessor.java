@@ -27,12 +27,15 @@ public class FileProcessor {
 		if(Logger.logLevelAbove(1)) { System.err.println("\nFile: " + absSourceFilePath); }
 		
 		boolean interpolateFiles = (opts.canSmooth() && curFileSettings.userWantInterpolate);
-		boolean upscaleFiles = (opts.canUpscale() && curFileSettings.userWantUpscale);
+		boolean upscaleFiles = ((opts.canUpscale() || curFileSettings.upscaleWithJava) && curFileSettings.userWantUpscale);
 		
 		List<String> outList = null;
 		List<String> errList = null;
 		
 		String[] outputs = null;
+		
+		// temp
+		String out_file_name_for_control = null;
 		
 		//System.out.println("Its Image: " + fileData.itsImage() + " | Format: " + fileData.getType() + " | Its Animated: + " + fileData.itsAnimated());
 		
@@ -62,6 +65,8 @@ public class FileProcessor {
 				}
 				else if(upscaleFiles) { // regular up-scaling
 					// up-scale image
+					
+					if(Logger.logLevelAbove(1)) { System.out.println("\nPROCESS_STAGE: UPSCALING_STAGE(IMAGE)"); }
 					
 					fileData.setTargetStatus(0.2f);
 					fileData.initProcessingTime();
@@ -138,6 +143,7 @@ public class FileProcessor {
 						}
 						
 						if(upscalingStage) {
+							if(Logger.logLevelAbove(1)) { System.out.println("\nPROCESS_STAGE: UPSCALING_STAGE"); }
 							while(needUpscale && Configuration.PROCESSING) {
 								
 								float guiStage = (maxSteps / currStep);
@@ -168,14 +174,35 @@ public class FileProcessor {
 									whileCommand = whileCommand.replace(whileSwaps[swi][0], whileSwaps[swi][1]);
 								}
 								
-								outputs = ProcessHandler.run(whileCommand, null, true, false, outList, errList, outputs);
-								if(outputs == null) {
-									System.err.println("ERROR EXEC: " + whileCommand);
-									return false;
+								if(curFileSettings.upscaleWithJava) {
+									
+									if(Logger.logLevelAbove(1)) {
+										System.out.println("\nUpscaling Image with Java IN_PATH: " + CURRENT_STAGE_INPUT_IMAGE_FILE_PATH + " | OUT_PATH: " + CURRENT_STAGE_OUTPUT_IMAGE_FILE_PATH + " TARGET_SCALE: " + targetW + "x" + targetH);
+									}
+									
+									int[] status = new int[1]; // storage for real time multi-thread up-scaling, in single image processing irrelevant
+									ImageProcessor.scaleImagesToSize(CURRENT_STAGE_INPUT_IMAGE_FILE_PATH, CURRENT_STAGE_OUTPUT_IMAGE_FILE_PATH, targetW, targetH, JAVA_IMAGE_SCALER_THREADS, status, outSize);
+									
+									// get real image size from BufferedImage Object (to check)
+									currentW = outSize[0];
+									currentH = outSize[1];
+									
+									if(Logger.logLevelAbove(1)) {
+										System.out.println("POSTPROCESSING_SCALE: " + currentW + "x" + currentH);
+									}
+								}
+								else { // Use AI to up-scale supplied image
+									outputs = ProcessHandler.run(whileCommand, null, true, false, outList, errList, outputs);
+									if(outputs == null) {
+										System.err.println("ERROR EXEC: " + whileCommand);
+										return false;
+									}
+									
+									// set after as result of model work, and because models pre-coded
+									currentW *= 4;
+									currentH *= 4;
 								}
 								
-								currentW *= 4;
-								currentH *= 4;
 								
 								CURRENT_STAGE_INPUT_IMAGE_FILE_PATH = CURRENT_STAGE_OUTPUT_IMAGE_FILE_PATH;
 								
@@ -471,7 +498,7 @@ public class FileProcessor {
 							}
 							
 							if(framesSizeBad || ProgramLogic.needScalingStage(CURRENT_STAGE_INPUT_FRAMES_FILES_LOCATION_PATH, targetW, targetH)) {
-								// can ge skipped if image size is bigger then minimum expected
+								// can be skipped if image size is bigger then minimum expected
 								
 								if(command.contains("CURRENT_STAGE_OUTPUT_FRAMES_FILES_LOCATION_PATH")) {
 									// path to output files
@@ -501,13 +528,38 @@ public class FileProcessor {
 								
 								if(Configuration.PROCESSING) {
 									curStep++;
-									//ProgramLogic.folderStatusWatcher(fileData.setCurrentProcessingStage(curStep), statusSourceFolderPath, statusTargetFolderPath, curStep, maxSteps, false);
-									ProgramLogic.runUpscalerStatusWatcher(fileData.setCurrentProcessingStage(curStep), outList, errList, statusSourceFolderPath, curStep, maxSteps);
-									outputs = ProcessHandler.run(command, null, true, false, outList, errList, outputs);
-									if(outputs == null) {
-										System.err.println("ERROR EXEC: " + command);
-										return false;
+									
+									if(curFileSettings.upscaleWithJava) {
+										
+										if(Logger.logLevelAbove(1)) {
+											System.out.println("\nUpscaling Folder with Images with Java IN_PATH: " + statusSourceFolderPath + " | OUT_PATH: " + statusTargetFolderPath + " TARGET_SCALE: " + targetW + "x" + targetH);
+										}
+										
+										int[] status  = new int[1]; // storage for real time multi-thread up-scaling, in single image processing irrelevant
+										int[] outSize = new int[2]; // storage for real images size extraction
+										ImageProcessor.scaleImagesToSize(statusSourceFolderPath, statusTargetFolderPath, targetW, targetH, JAVA_IMAGE_SCALER_THREADS, status, outSize);
+										
+										// get real image size from BufferedImage Object (to check)
+										currentW = outSize[0];
+										currentH = outSize[1];
+										
+										if(Logger.logLevelAbove(1)) {
+											System.out.println("POSTPROCESSING_SCALE: " + currentW + "x" + currentH);
+										}
 									}
+									else { // Use AI to up-scale supplied image
+										ProgramLogic.runUpscalerStatusWatcher(fileData.setCurrentProcessingStage(curStep), outList, errList, statusSourceFolderPath, curStep, maxSteps);
+										outputs = ProcessHandler.run(command, null, true, false, outList, errList, outputs);
+										if(outputs == null) {
+											System.err.println("ERROR EXEC: " + command);
+											return false;
+										}
+										
+										// set after as result of model work, and because models pre-coded
+										currentW *= 4;
+										currentH *= 4;
+									}
+									
 								}
 								else {
 									return false;
@@ -546,6 +598,13 @@ public class FileProcessor {
 									
 									if(new File(sourceFileLocation + fileName + fileExt).exists()) {
 										current_stage_video_out_location = (sourceFileLocation + fileName + "_fancy_" + targetW + "x" + targetH + fileExt);
+									}
+									
+									//System.out.println("\n\n\nEXTENSION: " + fileExt + "\n\n\n");
+									
+									// temp
+									if(fileExt.toLowerCase().equals(".gif")) {
+										out_file_name_for_control = current_stage_video_out_location;
 									}
 								}
 								
@@ -589,13 +648,25 @@ public class FileProcessor {
 //								if(statusSourceFolderPath != null && statusTargetFolderPath && != null)
 								//ProgramLogic.folderStatusWatcher(fileData.setCurrentProcessingStage(curStep), statusSourceFolderPath, statusTargetFolderPath, curStep, maxSteps, interpolationStage);
 								if(encoderStartStage) {
+									if(Logger.logLevelAbove(1)) { System.out.println("\nPROCESS_STAGE: ENCODER_START"); }
 									ProgramLogic.runVideoEncodeStatusWatcher(fileData.setCurrentProcessingStage(curStep), outList, errList, fileData.getEstimatedFramesCount(), curStep, maxSteps);
 								}
 								else if(interpolationStage) {
+									if(Logger.logLevelAbove(1)) { System.out.println("\nPROCESS_STAGE: INTERPOLATION"); }
 									alreadyInterpolated = true;
 									ProgramLogic.runInterpolatorStatusWatcher(fileData.setCurrentProcessingStage(curStep), outList, errList, statusSourceFolderPath, curStep, maxSteps);
 								}
 								else if(encoderEndStage) {
+									if(Logger.logLevelAbove(1)) { System.out.println("\nPROCESS_STAGE: ENCODER_END"); }
+									
+									// FIXME: This is hack to process animated images as video
+									// its working somehow, but need to override command for encoding
+									
+									if(out_file_name_for_control != null) { // remove everything related to it
+										
+										command = (Utils.quotePath(opts.FFMPEG_ENCODER_APP_PATH) + " -r " + outputFileFPS + " -i " + Utils.quotePath(CURRENT_STAGE_INPUT_FRAMES_FILES_LOCATION_PATH + "/" + FRAMES_STORING_FORMAT.replace("$FRAMES_EXTENSION$", FRAMES_TYPE)) + " -gifflags -transdiff -y " + Utils.quotePath(out_file_name_for_control));
+									}
+									
 									ProgramLogic.runVideoEncodeStatusWatcher(fileData.setCurrentProcessingStage(curStep), outList, errList, ProgramLogic.getNumFiles(statusSourceFolderPath), curStep, maxSteps);
 								}
 

@@ -178,6 +178,23 @@ public class ImageProcessor {
 			scaledTargetHeightFlt = desiredHeightFlt;
 		}
 		
+		boolean diffA = true;
+		
+		if(realImgWidthInt < desiredWidthInt || realImgHeightInt < desiredHeightInt) {
+			if(realImgWidthInt < realImgHeightInt) {  // |
+				scaledTargetWidthFlt = realImgWidthFlt * (desiredHeightFlt / realImgHeightFlt);
+				scaledTargetHeightFlt = desiredHeightFlt;
+			}
+			else {
+//				scaledTargetWidthFlt = desiredWidthFlt;
+//				scaledTargetHeightFlt = desiredHeightFlt; // realImgHeightFlt * (desiredWidthFlt / realImgWidthFlt);
+				
+				scaledTargetWidthFlt = realImgWidthFlt * (desiredHeightFlt / realImgHeightFlt);
+				scaledTargetHeightFlt = desiredHeightFlt;
+			}
+		}
+		
+		
 		int scaledTargetWidthInt  = ((int) scaledTargetWidthFlt);
 		int scaledTargetHeightInt = ((int) scaledTargetHeightFlt);
 		
@@ -201,7 +218,7 @@ public class ImageProcessor {
 		}
 		
 		if(desiredWidthInt > finScaledTargetWidthInt) {
-			int halfDiff = ((int)((desiredWidthFlt - scaledTargetWidthFlt) / 2f));
+			int halfDiffX = ((int)((desiredWidthFlt - scaledTargetWidthFlt) * 0.5f));
 
 			/* ####################################### PER IMAGE PART START ####################################### */
 			if(processingInSingleFileMode) {
@@ -212,7 +229,7 @@ public class ImageProcessor {
 				
 				for (int y = 0; y < desiredHeightInt; y++) {
 					for (int x = 0, sx = 0; x < desiredWidthInt; x++) {
-						if(halfDiff < x && sx < finScaledTargetHeightInt && sx < sxmax) {
+						if(halfDiffX < x && sx < finScaledTargetWidthInt && sx < sxmax) {
 							outarr[x][y] = imageArray[y][sx];
 							sx++;
 						}
@@ -253,7 +270,7 @@ public class ImageProcessor {
 									
 									for (int y = 0; y < desiredHeightInt; y++) {
 										for (int x = 0, sx = 0; x < desiredWidthInt; x++) {
-											if(halfDiff < x && sx < finScaledTargetWidthInt && sx < sxmax) {
+											if(halfDiffX < x && sx < finScaledTargetWidthInt && sx < sxmax) {
 												outarr[x][y] = imageArray[y][sx];
 												sx++;
 											}
